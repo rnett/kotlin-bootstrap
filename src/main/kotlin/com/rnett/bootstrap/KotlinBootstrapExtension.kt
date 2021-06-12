@@ -221,7 +221,7 @@ ${steps.replaceIndent("      ")}
     runs-on: $runner
     continue-on-error: true
     needs: test-no-bootstrap
-    if: ${sign}{{ needs.publish.test-no-bootstrap.result == 'success' }}
+    if: ${sign}{{ needs.test-no-bootstrap.result == 'success' }}
     env:
       ORG_GRADLE_PROJECT_kotlinBootstrap: "latest"
     steps:
@@ -243,11 +243,11 @@ ${steps.replaceIndent("      ")}
     if: always()
     steps:
       - name: Original Compile Failed
-        if: ${sign}{{ needs.publish.test-no-bootstrap.result != 'success' }}
+        if: ${sign}{{ needs.test-no-bootstrap.result != 'success' }}
         run: echo "::warning::Compilation without bootstrap failed, aborting"
         
       - name: Bootstrap Compile failed
-        if:  ${sign}{{ needs.publish.test-no-bootstrap.result == 'success' && needs.publish.test-kotlin-bootstrap.result != 'success' }}
+        if:  ${sign}{{ needs.test-no-bootstrap.result == 'success' && needs.test-kotlin-bootstrap.result != 'success' }}
         run: echo "::error::Compilation with Kotlin bootstrap failed"
         
         """.trimIndent()
