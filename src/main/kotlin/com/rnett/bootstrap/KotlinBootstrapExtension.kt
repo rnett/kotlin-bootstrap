@@ -171,7 +171,7 @@ public class KotlinBootstrapExtension(
     ) {
         generateCustomGithubWorkflow(
             """
-                - name: Compile with Kotlin Bootstrap
+                - name: Compile
                   run: |
                     ${commands.joinToString("\n")}
             """.trimIndent(),
