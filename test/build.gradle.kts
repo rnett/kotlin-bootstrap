@@ -1,3 +1,4 @@
+import com.rnett.bootstrap.kotlinBootstrapOr
 import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -17,7 +18,7 @@ tasks.test {
 }
 
 dependencies {
-    getKotlinPluginVersion()
+    implementation(kotlin("compiler-embeddable", "1.5.0"))
 }
 
 tasks.withType<KotlinCompile>() {
@@ -27,3 +28,5 @@ tasks.withType<KotlinCompile>() {
 println("Kotlin plugin version: ${getKotlinPluginVersion()}")
 
 println("Core libs: ${kotlin.coreLibrariesVersion}")
+
+println("Bootstrap or 1.0: ${kotlinBootstrapOr("1.0")}")

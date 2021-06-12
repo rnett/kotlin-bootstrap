@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "com.github.rnett.kotlin-bootstrap"
-version = "0.0.4-SNAPSHOT"
+version = "0.0.5-SNAPSHOT"
 description = "A Gradle settings plugin to use Kotlin bootstrap versions"
 
 repositories {
@@ -20,6 +20,12 @@ kotlin {
     target {
         attributes {
             attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 8)
+        }
+        explicitApi()
+    }
+    sourceSets.all {
+        languageSettings {
+            useExperimentalAnnotation("kotlin.contracts.ExperimentalContracts")
         }
     }
 }
