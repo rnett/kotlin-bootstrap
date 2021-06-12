@@ -195,12 +195,15 @@ public class KotlinBootstrapExtension(
             file.parentFile.mkdirs()
         }
 
+        val sign = "\$"
+
         @Language("yml")
         val jobs = """
 jobs:
   test-no-bootstrap:
     name: Compile normally
     runs-on: $runner
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK $jdk
@@ -216,6 +219,7 @@ ${steps.replaceIndent("      ")}
   test-kotlin-bootstrap:
     name: Compile with Kotlin bootstrap
     runs-on: $runner
+    continue-on-error: true
     needs: test-no-bootstrap
     env:
       ORG_GRADLE_PROJECT_kotlinBootstrap: "latest"
@@ -230,6 +234,21 @@ ${steps.replaceIndent("      ")}
         run: chmod +x gradlew
 
 ${steps.replaceIndent("      ")}
+
+  check-results:
+    name: Results
+    needs: [test-no-bootstrap, test-kotlin-bootstrap]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Original Compile Failed
+        if: ${sign}{{ needs.publish.test-no-bootstrap != 'success' }}
+        run: echo "::warning::Compilation without bootstrap failed, aborting"
+        
+      - name: Bootstrap Compile failed
+        if:  ${sign}{{ needs.publish.test-no-bootstrap == 'success' && needs.publish.test-kotlin-bootstrap != 'success' }}
+        run: echo "::error::Compilation with Kotlin bootstrap failed"
+        
         """.trimIndent()
 
         file.writeText(buildString {
