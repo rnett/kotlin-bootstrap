@@ -40,6 +40,7 @@ class KotlinBootstrapPlugin: Plugin<Settings> {
         useBootstrapProp = settings.providers.gradleProperty("kotlinBootstrap").forUseAtConfigurationTime()
 
         settings.gradle.beforeProject {
+            println("Project: ${this.path} = $bootstrapVersion")
             if(bootstrapVersion != null){
                 this.repositories.apply {
                     maven {
