@@ -80,7 +80,7 @@ public class KotlinBootstrapExtension(
 
     /**
      * If `true` (as it is by default), will substitute non-plugin dependencies with groups
-     * starting with `org.jetbrains.kotlin`.
+     * of `org.jetbrains.kotlin` or sub-groups.
      */
     public var substituteDependencies: Boolean = true
 

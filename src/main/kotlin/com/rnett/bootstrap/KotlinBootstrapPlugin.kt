@@ -25,7 +25,7 @@ public class KotlinBootstrapPlugin : Plugin<Settings> {
                     resolutionStrategy {
                         eachDependency {
                             if (extension.bootstrapEnabled) {
-                                if (target.group.startsWith("org.jetbrains.kotlin")) {
+                                if (target.group == "org.jetbrains.kotlin" || target.group.startsWith("org.jetbrains.kotlin.")) {
                                     val version = extension.realBootstrapVersion
                                         ?: error("Could not find a valid bootstrap version")
 
