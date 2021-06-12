@@ -9,8 +9,7 @@ plugins {
 }
 
 kotlinFutureTesting {
-//    generateGithubBootstrapWorkflow()
-//    generateGithubEapWorkflow()
+    generateGithubWorkflows { both() }
 }
 
 rootProject.name = "test"

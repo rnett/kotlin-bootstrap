@@ -3,7 +3,6 @@ package com.rnett.future.testing
 import org.gradle.api.Project
 import org.gradle.api.initialization.Settings
 import org.gradle.api.provider.Provider
-import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URL
@@ -49,7 +48,7 @@ public sealed class KotlinFutureVersion {
 }
 
 public class KotlinFutureTestingExtension(
-    private val rootProjectDir: File,
+    @PublishedApi internal val rootProjectDir: File,
     private val bootstrapProp: Provider<String>,
     private val eapProp: Provider<String>
 ) {
@@ -176,83 +175,14 @@ public class KotlinFutureTestingExtension(
         }
     }
 
-    public fun generateGithubBootstrapWorkflow(
-        gradleCommand: String = "assemble",
+    public inline fun generateGithubWorkflows(
         jdk: String = "15",
         runner: String = "ubuntu-latest",
         scheduling: Scheduling? = Scheduling.Weekly(),
         baseDir: File = rootProjectDir,
-        force: Boolean = false
+        force: Boolean = false,
+        block: GithubWorkflowGenerator.() -> Unit
     ) {
-        generateGithubBootstrapWorkflow(listOf("./gradlew $gradleCommand"), jdk, runner, scheduling, baseDir, force)
-    }
-
-    public fun generateGithubBootstrapWorkflow(
-        commands: List<String>,
-        jdk: String = "15",
-        runner: String = "ubuntu-latest",
-        scheduling: Scheduling? = Scheduling.Weekly(),
-        baseDir: File = rootProjectDir,
-        force: Boolean = false
-    ) {
-        generateCustomGithubBootstrapWorkflow(
-            """
-                - name: Compile
-                  run: |
-                    ${commands.joinToString("\n")}
-            """.trimIndent(),
-            jdk, runner, scheduling, baseDir, force
-        )
-    }
-
-    public fun generateCustomGithubBootstrapWorkflow(
-        @Language("yml") steps: String,
-        jdk: String = "15",
-        runner: String = "ubuntu-latest",
-        scheduling: Scheduling? = Scheduling.Weekly(),
-        baseDir: File = rootProjectDir,
-        force: Boolean = false
-    ) {
-        WorkflowGenerationHelper.generateCustomGithubWorkflow(steps, jdk, runner, scheduling, baseDir, force, false)
-    }
-
-    public fun generateGithubEapWorkflow(
-        gradleCommand: String = "assemble",
-        jdk: String = "15",
-        runner: String = "ubuntu-latest",
-        scheduling: Scheduling? = Scheduling.Weekly(),
-        baseDir: File = rootProjectDir,
-        force: Boolean = false
-    ) {
-        generateGithubEapWorkflow(listOf("./gradlew $gradleCommand"), jdk, runner, scheduling, baseDir, force)
-    }
-
-    public fun generateGithubEapWorkflow(
-        commands: List<String>,
-        jdk: String = "15",
-        runner: String = "ubuntu-latest",
-        scheduling: Scheduling? = Scheduling.Weekly(),
-        baseDir: File = rootProjectDir,
-        force: Boolean = false
-    ) {
-        generateCustomGithubEapWorkflow(
-            """
-                - name: Compile
-                  run: |
-                    ${commands.joinToString("\n")}
-            """.trimIndent(),
-            jdk, runner, scheduling, baseDir, force
-        )
-    }
-
-    public fun generateCustomGithubEapWorkflow(
-        @Language("yml") steps: String,
-        jdk: String = "15",
-        runner: String = "ubuntu-latest",
-        scheduling: Scheduling? = Scheduling.Weekly(),
-        baseDir: File = rootProjectDir,
-        force: Boolean = false
-    ) {
-        WorkflowGenerationHelper.generateCustomGithubWorkflow(steps, jdk, runner, scheduling, baseDir, force, true)
+        GithubWorkflowGenerator(jdk, runner, scheduling, baseDir, force).apply(block)
     }
 }

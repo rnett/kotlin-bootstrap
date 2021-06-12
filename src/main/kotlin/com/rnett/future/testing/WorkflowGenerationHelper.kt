@@ -3,15 +3,71 @@ package com.rnett.future.testing
 import org.intellij.lang.annotations.Language
 import java.io.File
 
-internal object WorkflowGenerationHelper {
+public class GithubWorkflowGenerator(
+    private val jdk: String,
+    private val runner: String,
+    private val scheduling: Scheduling?,
+    private val baseDir: File,
+    private val force: Boolean
+) {
 
-    fun generateCustomGithubWorkflow(
+    public fun bootstrap(
+        gradleCommand: String = "assemble"
+    ) {
+        bootstrap(listOf("./gradlew $gradleCommand"))
+    }
+
+    public fun bootstrap(commands: List<String>) {
+        bootstrapCustom(
+            """
+                - name: Compile
+                  run: |
+                    ${commands.joinToString("\n")}
+            """.trimIndent()
+        )
+    }
+
+    public fun bootstrapCustom(@Language("yml") steps: String) {
+        generateCustomGithubWorkflow(steps, false)
+    }
+
+    public fun eap(
+        gradleCommand: String = "assemble"
+    ) {
+        eap(listOf("./gradlew $gradleCommand"))
+    }
+
+    public fun eap(commands: List<String>) {
+        eapCustom(
+            """
+                - name: Compile
+                  run: |
+                    ${commands.joinToString("\n")}
+            """.trimIndent()
+        )
+    }
+
+    public fun eapCustom(@Language("yml") steps: String) {
+        generateCustomGithubWorkflow(steps, true)
+    }
+
+    public fun both(gradleCommand: String = "assemble") {
+        bootstrap(gradleCommand)
+        eap(gradleCommand)
+    }
+
+    public fun both(commands: List<String>) {
+        bootstrap(commands)
+        eap(commands)
+    }
+
+    public fun bothCustom(@Language("yml") steps: String) {
+        bootstrapCustom(steps)
+        eapCustom(steps)
+    }
+
+    private fun generateCustomGithubWorkflow(
         @Language("yml") steps: String,
-        jdk: String,
-        runner: String,
-        scheduling: Scheduling?,
-        baseDir: File,
-        force: Boolean,
         isEap: Boolean
     ) {
 
