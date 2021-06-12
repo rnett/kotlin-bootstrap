@@ -15,10 +15,10 @@ private lateinit var useBootstrapProp: Provider<String>
 
 private val bootstrapVersion by lazy {
     val prop = useBootstrapProp.orNull ?: return@lazy null
-    if(prop.isBlank())
+    if (prop.isBlank())
         return@lazy latestBootstrapVersion
 
-    when(prop){
+    when (prop) {
         "auto" -> latestBootstrapVersion
         "latest" -> latestBootstrapVersion
         else -> prop
@@ -35,13 +35,12 @@ fun bootstrapOr(version: String): String {
 
 fun String.orBootstrapVersion() = bootstrapVersion ?: this
 
-class KotlinBootstrapPlugin: Plugin<Settings> {
+class KotlinBootstrapPlugin : Plugin<Settings> {
     override fun apply(settings: Settings) {
         useBootstrapProp = settings.providers.gradleProperty("kotlinBootstrap").forUseAtConfigurationTime()
 
         settings.gradle.beforeProject {
-            println("Project: ${this.path} = $bootstrapVersion")
-            if(bootstrapVersion != null){
+            if (bootstrapVersion != null) {
                 this.repositories.apply {
                     maven {
                         url = URI("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap")
@@ -53,14 +52,14 @@ class KotlinBootstrapPlugin: Plugin<Settings> {
         settings.pluginManagement {
             resolutionStrategy {
                 eachPlugin {
-                    if(bootstrapVersion != null) {
+                    if (bootstrapVersion != null) {
                         if (target.id.id.startsWith("org.jetbrains.kotlin.")) {
                             useVersion(bootstrapVersion)
                         }
                     }
                 }
             }
-            repositories {
+            repositories.apply {
                 maven {
                     url = URI("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap")
                 }
