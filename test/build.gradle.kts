@@ -1,4 +1,3 @@
-import com.rnett.bootstrap.orBootstrapVersion
 import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -17,7 +16,7 @@ tasks.test {
     useJUnit()
 }
 
-dependencies{
+dependencies {
     getKotlinPluginVersion()
 }
 
@@ -26,3 +25,5 @@ tasks.withType<KotlinCompile>() {
 }
 
 println("Kotlin plugin version: ${getKotlinPluginVersion()}")
+
+println("Core libs: ${kotlin.coreLibrariesVersion}")
