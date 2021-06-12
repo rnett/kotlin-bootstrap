@@ -3,7 +3,6 @@ package com.rnett.bootstrap
 import org.gradle.api.Plugin
 import org.gradle.api.initialization.Settings
 import org.gradle.api.provider.Provider
-import org.gradle.plugin.use.PluginDependencySpec
 import java.net.URI
 import java.net.URL
 
@@ -13,21 +12,18 @@ private val latestBootstrapVersion by lazy {
 
 private lateinit var useBootstrapProp: Provider<String>
 
-private val bootstrapVersion by lazy {
-    val prop = useBootstrapProp.orNull ?: return@lazy null
-    if (prop.isBlank())
-        return@lazy latestBootstrapVersion
+private val bootstrapVersion: String?
+    get() {
+        val prop = useBootstrapProp.orNull ?: return null
+        if (prop.isBlank())
+            return latestBootstrapVersion
 
-    when (prop) {
-        "auto" -> latestBootstrapVersion
-        "latest" -> latestBootstrapVersion
-        else -> prop
+        return when (prop) {
+            "auto" -> latestBootstrapVersion
+            "latest" -> latestBootstrapVersion
+            else -> prop
+        }
     }
-}
-
-infix fun PluginDependencySpec.bootstrapOrVersion(version: String): PluginDependencySpec {
-    return version(bootstrapVersion ?: version)
-}
 
 fun bootstrapOr(version: String): String {
     return bootstrapVersion ?: version
