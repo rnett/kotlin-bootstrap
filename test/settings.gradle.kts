@@ -9,7 +9,7 @@ plugins {
 }
 
 kotlinFutureTesting {
-    generateGithubWorkflows { both() }
+//    generateGithubWorkflows { both() }
 }
 
 rootProject.name = "test"

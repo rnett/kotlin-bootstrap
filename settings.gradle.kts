@@ -1,2 +1,2 @@
-rootProject.name = "kotlin-bootstrap"
+rootProject.name = "kotlin-future-testing"
 

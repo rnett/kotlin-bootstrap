@@ -8,9 +8,9 @@ plugins {
     `kotlin-dsl`
 }
 
-group = "com.github.rnett.kotlin-bootstrap"
+group = "com.github.rnett.kotlin-future-testing"
 version = "0.0.6-SNAPSHOT"
-description = "A Gradle settings plugin to use Kotlin bootstrap versions"
+description = "A Gradle settings plugin to use Kotlin future versions"
 
 repositories {
     mavenCentral()
