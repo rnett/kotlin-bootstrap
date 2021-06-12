@@ -54,7 +54,7 @@ afterEvaluate {
         }
 
         pom {
-            name.set("Kotlin Bootstrap Gradle Plugin")
+            name.set("Kotlin Future Testing Gradle Plugin")
             description.set(project.description)
             inceptionYear.set("2021")
             url.set("https://github.com/rnett/kotlin-bootstrap/")
@@ -86,11 +86,11 @@ afterEvaluate {
 
 gradlePlugin {
     plugins {
-        create("kotlinBootstrapPlugin") {
-            id = "com.github.rnett.kotlin-bootstrap"
-            displayName = "Kotlin Bootstrap Plugin"
-            description = "Kotlin Bootstrap Plugin"
-            implementationClass = "com.rnett.bootstrap.KotlinBootstrapPlugin"
+        create("kotlinFutureTestingPlugin") {
+            id = "com.github.rnett.kotlin-future-testing"
+            displayName = "Kotlin Future Testing Plugin"
+            description = "A plugin for testing future versions of Kotlin"
+            implementationClass = "com.rnett.future.testing.KotlinFutureTestingPlugin"
         }
     }
 }

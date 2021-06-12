@@ -1,15 +1,16 @@
-import com.rnett.bootstrap.kotlinBootstrap
+import com.rnett.future.testing.kotlinFutureTesting
 
 pluginManagement {
     includeBuild("..")
 }
 
 plugins {
-    id("com.github.rnett.kotlin-bootstrap")
+    id("com.github.rnett.kotlin-future-testing")
 }
 
-kotlinBootstrap {
-//    generateGithubWorkflow()
+kotlinFutureTesting {
+//    generateGithubBootstrapWorkflow()
+//    generateGithubEapWorkflow()
 }
 
 rootProject.name = "test"

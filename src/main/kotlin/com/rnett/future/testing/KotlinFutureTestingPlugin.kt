@@ -1,4 +1,4 @@
-package com.rnett.bootstrap
+package com.rnett.future.testing
 
 import org.gradle.api.Plugin
 import org.gradle.api.initialization.Settings
@@ -6,33 +6,33 @@ import org.slf4j.LoggerFactory
 import java.net.URI
 
 
-public class KotlinBootstrapPlugin : Plugin<Settings> {
-    private val logger = LoggerFactory.getLogger(KotlinBootstrapPlugin::class.java)
+public class KotlinFutureTestingPlugin : Plugin<Settings> {
+    private val logger = LoggerFactory.getLogger(KotlinFutureTestingPlugin::class.java)
 
     override fun apply(settings: Settings) {
-        val extension = KotlinBootstrapExtension(
+        val extension = KotlinFutureTestingExtension(
             settings.rootDir,
-            settings.providers.gradleProperty("kotlinBootstrap").forUseAtConfigurationTime()
+            settings.providers.gradleProperty("kotlinBootstrap").forUseAtConfigurationTime(),
+            settings.providers.gradleProperty("kotlinEap").forUseAtConfigurationTime()
         )
 
-        settings.extensions.add("kotlinBootstrap", extension)
+        settings.extensions.add(kotlinFutureTestingExtension, extension)
 
         settings.gradle.beforeProject {
-            extensions.extraProperties["kotlinBootstrapVersion"] = extension.realBootstrapVersion
+            extensions.extraProperties[kotlinFutureVersionProp] = extension.futureVersion
 
             if (extension.substituteDependencies) {
                 configurations.configureEach {
                     resolutionStrategy {
                         eachDependency {
-                            if (extension.bootstrapEnabled) {
+                            if (extension.isFuture) {
                                 if (target.group == "org.jetbrains.kotlin" || target.group.startsWith("org.jetbrains.kotlin.")) {
-                                    val version = extension.realBootstrapVersion
-                                        ?: error("Could not find a valid bootstrap version")
+                                    val version = extension.futureVersion.version!!
 
-                                    logger.info("Using bootstrap version $version for dependency $target")
+                                    logger.info("Using future version $version for dependency $target")
 
                                     useVersion(version)
-                                    because("Using Kotlin bootstrap version $version")
+                                    because("Using Kotlin future version $version")
                                 }
                             }
                         }
@@ -40,7 +40,7 @@ public class KotlinBootstrapPlugin : Plugin<Settings> {
                 }
             }
 
-            if (extension.bootstrapEnabled) {
+            if (extension.isBootstrap) {
                 logger.info("Using bootstrap version, adding boostrap repo for project ${this.path}")
                 this.repositories.apply {
                     maven {
@@ -53,19 +53,20 @@ public class KotlinBootstrapPlugin : Plugin<Settings> {
         settings.pluginManagement {
             resolutionStrategy {
                 eachPlugin {
-                    if (extension.bootstrapEnabled) {
+                    if (extension.isBootstrap) {
                         if (target.id.id.startsWith("org.jetbrains.kotlin.")) {
-                            val version = extension.realBootstrapVersion
-                                ?: error("Could not find a valid bootstrap version")
+                            val version = extension.futureVersion.version!!
                             logger.info("Using bootstrap version $version for plugin ${target.id.id}")
                             useVersion(version)
                         }
                     }
                 }
             }
-            repositories.apply {
-                maven {
-                    url = URI("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap")
+            if (extension.isBootstrap) {
+                repositories.apply {
+                    maven {
+                        url = URI("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap")
+                    }
                 }
             }
         }
