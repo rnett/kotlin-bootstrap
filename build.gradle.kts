@@ -8,8 +8,8 @@ plugins {
     `kotlin-dsl`
 }
 
+version = "0.0.7-SNAPSHOT"
 group = "com.github.rnett.kotlin-future-testing"
-version = "0.0.6-SNAPSHOT"
 description = "A Gradle settings plugin to use Kotlin future versions"
 
 repositories {
@@ -30,15 +30,23 @@ kotlin {
     }
 }
 
-dependencies {
-}
-
 tasks.test {
     useJUnit()
 }
 
 tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "1.8"
+}
+
+gradlePlugin {
+    plugins {
+        create("kotlinFutureTestingPlugin") {
+            id = "com.github.rnett.kotlin-future-testing"
+            displayName = "Kotlin Future Testing Plugin"
+            description = "A plugin for testing future versions of Kotlin"
+            implementationClass = "com.rnett.future.testing.KotlinFutureTestingPlugin"
+        }
+    }
 }
 
 afterEvaluate {
@@ -80,17 +88,6 @@ afterEvaluate {
                     url.set("https://github.com/rnett/")
                 }
             }
-        }
-    }
-}
-
-gradlePlugin {
-    plugins {
-        create("kotlinFutureTestingPlugin") {
-            id = "com.github.rnett.kotlin-future-testing"
-            displayName = "Kotlin Future Testing Plugin"
-            description = "A plugin for testing future versions of Kotlin"
-            implementationClass = "com.rnett.future.testing.KotlinFutureTestingPlugin"
         }
     }
 }
