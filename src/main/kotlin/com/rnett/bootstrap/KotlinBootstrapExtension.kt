@@ -203,10 +203,10 @@ jobs:
     runs-on: $runner
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK jobs:$jdk
+      - name: Set up JDK $jdk
         uses: actions/setup-java@v1
         with:
-          java-version: jobs:$jdk
+          java-version: $jdk
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
