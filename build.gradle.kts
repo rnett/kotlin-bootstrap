@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "com.github.rnett.kotlin-bootstrap"
-version = "0.0.2-SNAPSHOT"
+version = "0.0.3-SNAPSHOT"
 description = "A Gradle settings plugin to use Kotlin bootstrap versions"
 
 repositories {
