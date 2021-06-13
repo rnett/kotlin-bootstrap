@@ -25,7 +25,13 @@ tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "1.8"
 }
 
-kotlin.coreLibrariesVersion
+kotlin {
+    sourceSets.all {
+        languageSettings {
+            useExperimentalAnnotation("kotlin.contracts.ExperimentalContracts")
+        }
+    }
+}
 
 println("Kotlin plugin version: ${getKotlinPluginVersion()}")
 println("Kotlin future version: $kotlinFutureVersion")

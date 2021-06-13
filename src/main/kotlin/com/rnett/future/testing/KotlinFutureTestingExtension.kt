@@ -41,6 +41,7 @@ public sealed class KotlinFutureVersion {
 
     public object None : KotlinFutureVersion() {
         override val version: String? = null
+        override fun toString(): String = "None"
     }
 
     public data class Eap(override val version: String) : KotlinFutureVersion()
@@ -63,6 +64,8 @@ public class KotlinFutureTestingExtension(
      * of `org.jetbrains.kotlin` or sub-groups.
      */
     public var substituteDependencies: Boolean = true
+
+    public var reportICEs: Boolean = true
 
     private val bootstrapFilters = mutableListOf<(String) -> Boolean>()
     private val eapFilters = mutableListOf<(String) -> Boolean>()
@@ -186,6 +189,6 @@ public class KotlinFutureTestingExtension(
         force: Boolean = false,
         block: GithubWorkflowGenerator.() -> Unit
     ) {
-        GithubWorkflowGenerator(jdk, runner, scheduling, baseDir, force).apply(block)
+        GithubWorkflowGenerator(jdk, runner, scheduling, baseDir, force, reportICEs).apply(block)
     }
 }

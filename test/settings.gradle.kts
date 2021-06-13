@@ -9,6 +9,7 @@ plugins {
 }
 
 kotlinFutureTesting {
+//    reportICEs = true
 //    generateGithubWorkflows { both() }
 }
 

@@ -3,6 +3,7 @@ package com.rnett.future.testing
 import org.gradle.api.Plugin
 import org.gradle.api.initialization.Settings
 import org.slf4j.LoggerFactory
+import java.io.File
 import java.net.URI
 
 
@@ -15,6 +16,18 @@ public class KotlinFutureTestingPlugin : Plugin<Settings> {
             settings.providers.gradleProperty("kotlinBootstrap").forUseAtConfigurationTime(),
             settings.providers.gradleProperty("kotlinEap").forUseAtConfigurationTime()
         )
+
+        settings.gradle.settingsEvaluated {
+            if (extension.reportICEs) {
+                settings.gradle.taskGraph.addTaskExecutionListener(
+                    IceListener(
+                        File(settings.rootDir, ".kotlin-future-testing-ICE-report"),
+                        settings.providers.gradleProperty("reportICEs").forUseAtConfigurationTime()
+                    )
+                )
+            }
+        }
+
 
         settings.extensions.add(kotlinFutureTestingExtension, extension)
 
