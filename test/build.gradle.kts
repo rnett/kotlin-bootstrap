@@ -25,5 +25,7 @@ tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "1.8"
 }
 
+kotlin.coreLibrariesVersion
+
 println("Kotlin plugin version: ${getKotlinPluginVersion()}")
 println("Kotlin future version: $kotlinFutureVersion")

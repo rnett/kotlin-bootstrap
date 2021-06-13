@@ -53,7 +53,7 @@ public class KotlinFutureTestingPlugin : Plugin<Settings> {
         settings.pluginManagement {
             resolutionStrategy {
                 eachPlugin {
-                    if (extension.isBootstrap) {
+                    if (extension.isFuture) {
                         if (target.id.id.startsWith("org.jetbrains.kotlin.")) {
                             val version = extension.futureVersion.version!!
                             logger.info("Using bootstrap version $version for plugin ${target.id.id}")

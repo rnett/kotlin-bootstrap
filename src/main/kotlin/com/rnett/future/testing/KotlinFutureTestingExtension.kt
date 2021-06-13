@@ -107,30 +107,31 @@ public class KotlinFutureTestingExtension(
     private fun latestEapVersions(): List<String> {
         val text = URL("https://api.github.com/repos/jetbrains/kotlin/releases?per_page=6").readText()
         val regex = Regex("\"tag_name\"\\s*:\\s*\"v([^\"]+)\"")
-        println("Read text: $text")
         return regex.findAll(text).map { it.groupValues[1] }.toList()
             .also { if (it.isEmpty()) error("No Kotlin EAP versions found") }
     }
 
     public val isEap: Boolean by lazy {
-        !disabled && eapProp.isPresent && !bootstrapProp.isPresent
+        futureProp().isEap
     }
 
     public val isBootstrap: Boolean by lazy {
-        !disabled && bootstrapProp.isPresent
+        futureProp().isBootstrap
     }
 
     public val isFuture: Boolean by lazy {
-        isEap || isBootstrap
+        futureProp().isFuture
     }
 
     private fun futureProp(): KotlinFutureVersion {
         if (disabled)
             return KotlinFutureVersion.None
-        if (bootstrapProp.isPresent)
-            return KotlinFutureVersion.Bootstrap(bootstrapProp.get())
-        if (eapProp.isPresent)
-            return KotlinFutureVersion.Eap(eapProp.get())
+        bootstrapProp.orNull?.let {
+            return KotlinFutureVersion.Bootstrap(it)
+        }
+        eapProp.orNull?.let {
+            return KotlinFutureVersion.Eap(it)
+        }
         return KotlinFutureVersion.None
     }
 
@@ -151,14 +152,14 @@ public class KotlinFutureTestingExtension(
         if (prop is KotlinFutureVersion.None)
             return@lazy KotlinFutureVersion.None
 
-        logger.debug("Looking up bootstrap versions for version: \"$prop\"")
+        logger.debug("Looking up Kotlin future versions for version: \"$prop\"")
 
         val version = prop.version!!
 
         val isLatest = version.isBlank() || version.toLowerCase().let { it == "auto" || it == "latest" }
 
         if (!isLatest) {
-            logger.debug("Version is exact, using $prop")
+            logger.info("Kotlin future version is exact, using $prop")
             return@lazy prop
         }
 
@@ -172,6 +173,8 @@ public class KotlinFutureTestingExtension(
                 latestEapVersions().firstMatching(eapFilters)
             )
             KotlinFutureVersion.None -> KotlinFutureVersion.None
+        }.also {
+            logger.info("Found Kotlin future version $it")
         }
     }
 
