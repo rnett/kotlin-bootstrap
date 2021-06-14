@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.5.10"
+    kotlin("plugin.serialization") version "1.5.10"
     id("com.vanniktech.maven.publish") version "0.15.1"
     id("org.jetbrains.dokka") version "1.4.32"
     `java-gradle-plugin`
@@ -14,6 +15,10 @@ description = "A Gradle settings plugin to use Kotlin future versions"
 
 repositories {
     mavenCentral()
+}
+
+dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 }
 
 kotlin {

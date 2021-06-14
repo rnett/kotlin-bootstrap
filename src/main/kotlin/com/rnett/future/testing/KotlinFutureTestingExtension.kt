@@ -174,6 +174,9 @@ public class KotlinFutureTestingExtension(
 
     internal var oldKotlinVersion: String? = null
 
+    private fun oldKotlinVersion() =
+        oldKotlinVersion ?: error("No Kotlin version found, did you use any Kotlin plugins?")
+
     internal val version by lazy {
         val prop = futureProp()
         KotlinFutureTestingVersion(
@@ -183,7 +186,7 @@ public class KotlinFutureTestingExtension(
     }
 
     private fun futureVersion(prop: KotlinFutureVersionProp): String {
-        val oldVersion = oldKotlinVersion ?: error("No Kotlin version found, did you use any Kotlin plugins?")
+        val oldVersion = oldKotlinVersion()
         if (!isFuture)
             return oldVersion
 
@@ -221,8 +224,8 @@ public class KotlinFutureTestingExtension(
             is KotlinFutureVersionProp.Bootstrap -> latestBootstrapVersions().matching(bootstrapFilters)
             is KotlinFutureVersionProp.Eap -> latestEapVersions().matching(eapFilters)
             KotlinFutureVersionProp.None -> emptyList()
-        }.also {
-            logger.info("Found Kotlin future version $it")
+        }.filter { it > oldKotlinVersion() }.also {
+            logger.info("Found Kotlin future versions $it")
         }
     }
 

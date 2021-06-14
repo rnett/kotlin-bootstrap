@@ -1,5 +1,8 @@
 package com.rnett.future.testing
 
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.gradle.api.Task
 import org.gradle.api.execution.TaskExecutionListener
 import org.gradle.api.logging.StandardOutputListener
@@ -20,32 +23,36 @@ internal class IceListener(private val outputDir: File, doReportProp: Provider<S
         }
     }
 
-    companion object {
-        private fun writeReport(
-            baseDir: File,
-            rootProjectName: String,
-            taskPath: String,
-            taskInputs: Map<String, Any>,
-            kotlinVersion: String,
-            kotlinVersionKind: KotlinVersionKind,
-            gitRef: String?,
-            gitRemotes: Map<String, String>?,
-            stderr: String
-        ) {
-            val fullTaskPath = "$rootProjectName:${taskPath.trim(':')}"
-            val file = File(baseDir, fullTaskPath.replace(":", "-"))
-            file.parentFile.mkdirs()
-            file.writeText(buildString {
-                appendLine("Root Project: $rootProjectName")
-                appendLine("Task: $taskPath")
-                appendLine("Task input properties: $taskInputs")
-                appendLine("Kotlin version: $kotlinVersion")
-                appendLine("Kotlin version kind: $kotlinVersionKind")
-                appendLine("Git ref: $gitRef")
-                appendLine("Git remotes: $gitRemotes")
-                appendLine(stderr)
-            })
+    @Serializable
+    class Report(
+        val rootProjectName: String,
+        val taskPath: String,
+        val taskInputs: Map<String, String>,
+        val kotlinVersion: String,
+        val kotlinVersionKind: String,
+        val compilerStderr: String,
+        val gitRef: String?,
+        val gitRemotes: Map<String, String>?,
+        val githubRunUrl: String?,
+    ) {
+        fun humanReadable(): String = buildString {
+            appendLine("Root Project: $rootProjectName")
+            appendLine("Task: $taskPath")
+            appendLine("Task input properties: $taskInputs")
+            appendLine("Kotlin version: $kotlinVersion")
+            appendLine("Kotlin version kind: $kotlinVersionKind")
+            gitRef?.let { appendLine("Git ref: $it") }
+            gitRemotes?.let { appendLine("Git remotes: $it") }
+            githubRunUrl?.let { appendLine("Github run url: $it") }
+            appendLine(compilerStderr)
         }
+    }
+
+    companion object {
+        private val json = Json {
+            prettyPrint = true
+        }
+
     }
 
     override fun beforeExecute(task: Task) {
@@ -65,17 +72,22 @@ internal class IceListener(private val outputDir: File, doReportProp: Provider<S
         if (exception != null &&
             "Internal compiler error" in exception.cause?.message.orEmpty()
         ) {
-            writeReport(
-                outputDir,
+            @Suppress("UNCHECKED_CAST")
+            val report = Report(
                 task.project.rootProject.name,
                 task.path,
-                task.inputs.properties,
+                task.inputs.properties.mapValues { (it.value as Any?).toString() },
                 task.project.kotlinFutureVersion.version,
-                task.project.kotlinFutureVersion.versionKind,
+                task.project.kotlinFutureVersion.versionKind.name,
+                stderr,
                 gitRef(task.project.projectDir),
                 gitRemotes(task.project.projectDir),
-                stderr
+                GithubEnv.runUrl
             )
+            val fileName = "${task.project.rootProject.name}:${task.path.trim(':')}".replace(":", "$")
+            outputDir.mkdirs()
+            File(outputDir, "$fileName.json").writeText(json.encodeToString(report))
+            File(outputDir, "$fileName.txt").writeText(report.humanReadable())
         }
     }
 }

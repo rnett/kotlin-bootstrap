@@ -17,6 +17,12 @@ internal object GithubEnv {
     val sha by delegate()
     val ref by delegate()
 
+    val runUrl
+        get() = if (isGithub)
+            "https://github.com/$repository/actions/runs/$runId"
+        else
+            null
+
     val isGithub get() = System.getenv("GITHUB_WORKFLOW") != null
 }
 
