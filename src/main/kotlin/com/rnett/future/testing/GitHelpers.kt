@@ -67,7 +67,3 @@ internal fun gitRef(root: File): String? {
         }
     }
 }
-
-public fun main() {
-    File("./test>file>task").writeText("test")
-}

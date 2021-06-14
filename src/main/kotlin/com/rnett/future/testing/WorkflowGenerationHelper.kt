@@ -141,7 +141,7 @@ ${steps.replaceIndent("      ")}
         uses: actions/upload-artifact@v2
         if: ${sign}{{ failure() }}
         with:
-          name: future-ice-report
+          name: kotlin-future-ICE-report
           path: build/kotlin-future-testing-ICE-report
         
   check-results:
