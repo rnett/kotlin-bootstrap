@@ -1,17 +1,10 @@
 package com.rnett.future.testing
 
-import org.gradle.api.Project
 import org.gradle.api.initialization.Settings
 import org.gradle.api.provider.Provider
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URL
-
-internal const val kotlinFutureVersionProp = "kotlinFutureVersion"
-
-public val Project.kotlinFutureVersion: KotlinFutureVersion
-    get() = extensions.extraProperties.properties[kotlinFutureVersionProp] as KotlinFutureVersion?
-        ?: KotlinFutureVersion.None
 
 internal const val kotlinFutureTestingExtension = "kotlinFutureTesting"
 
@@ -23,29 +16,53 @@ public val Settings.kotlinFutureTesting: KotlinFutureTestingExtension
     get() =
         extensions.getByName(kotlinFutureTestingExtension) as KotlinFutureTestingExtension
 
-public sealed class KotlinFutureVersion {
-    public abstract val version: String?
+internal enum class VersionClamping {
+    None, Feature, Incremental;
 
-    public fun or(normal: String): String = this.version ?: normal
-    public operator fun invoke(normal: String): String = or(normal)
+    companion object {
+        private val incrementalRegex = Regex("(\\d+.\\d+.\\d)")
+        private val featureRegex = Regex("(\\d+.\\d+)")
+    }
 
-    public fun <T> select(future: T, normal: T): T = if (isFuture) future else normal
-    public operator fun <T> invoke(future: T, normal: T): T = select(future, normal)
+    internal fun matchingHelper(
+        original: String,
+        kind: KotlinVersionKind,
+        versions: List<String>
+    ): Pair<String, String?> {
+        val prefix = when (this) {
+            None -> return "" to versions.firstOrNull() ?: error("No Kotlin ${kind.name.toLowerCase()} versions found")
+            Feature -> featureRegex.find(original)?.groupValues?.get(1)
+                ?: error("Can't find feature version of $original")
+            Incremental -> incrementalRegex.find(original)?.groupValues?.get(1)
+                ?: error("Can't find incremental version of $original")
+        }
+        return prefix to versions.firstOrNull { it.startsWith(prefix) }
+    }
 
-    public fun <T> select(futureNormal: Pair<T, T>): T = select(futureNormal.first, futureNormal.second)
-    public operator fun <T> invoke(futureNormal: Pair<T, T>): T = select(futureNormal)
+    fun matchingOrNull(original: String, kind: KotlinVersionKind, versions: List<String>): String? =
+        matchingHelper(original, kind, versions).second
 
-    public val isEap: Boolean get() = this is Eap
-    public val isBootstrap: Boolean get() = this is Bootstrap
-    public val isFuture: Boolean get() = this !is None
+    fun matching(original: String, kind: KotlinVersionKind, versions: List<String>): String {
+        val (prefix, result) = matchingHelper(original, kind, versions)
+        return result
+            ?: error("No Kotlin ${kind.name.toLowerCase()} versions found with the same ${this.name.toLowerCase()} version as $original ($prefix).  Versions: $versions")
+    }
+}
 
-    public object None : KotlinFutureVersion() {
+internal sealed class KotlinFutureVersionProp(val versionKind: KotlinVersionKind) {
+    abstract val version: String?
+
+    val isEap: Boolean get() = this is Eap
+    val isBootstrap: Boolean get() = this is Bootstrap
+    val isFuture: Boolean get() = this !is None
+
+    object None : KotlinFutureVersionProp(KotlinVersionKind.Release) {
         override val version: String? = null
         override fun toString(): String = "None"
     }
 
-    public data class Eap(override val version: String) : KotlinFutureVersion()
-    public data class Bootstrap(override val version: String) : KotlinFutureVersion()
+    data class Eap(override val version: String) : KotlinFutureVersionProp(KotlinVersionKind.Eap)
+    data class Bootstrap(override val version: String) : KotlinFutureVersionProp(KotlinVersionKind.Bootstrap)
 }
 
 public class KotlinFutureTestingExtension(
@@ -64,8 +81,6 @@ public class KotlinFutureTestingExtension(
      * of `org.jetbrains.kotlin` or sub-groups.
      */
     public var substituteDependencies: Boolean = true
-
-    public var reportICEs: Boolean = true
 
     private val bootstrapFilters = mutableListOf<(String) -> Boolean>()
     private val eapFilters = mutableListOf<(String) -> Boolean>()
@@ -87,13 +102,28 @@ public class KotlinFutureTestingExtension(
         bootstrapFilters += filter
     }
 
-
     /**
      * Apply a filter to the bootstrap versions.
      * This is always applied, even when the version is specified via property.
      */
     public fun filterEap(filter: (String) -> Boolean) {
         eapFilters += filter
+    }
+
+    public fun requireSameFeatureVersion() {
+        clamping = VersionClamping.Feature
+    }
+
+    public fun requireSameIncrementalVersion() {
+        clamping = VersionClamping.Incremental
+    }
+
+    public fun preferSameFeatureVersion() {
+        preferredClamping = VersionClamping.Feature
+    }
+
+    public fun preferSameIncrementalVersion() {
+        preferredClamping = VersionClamping.Incremental
     }
 
     private val logger = LoggerFactory.getLogger(KotlinFutureTestingPlugin::class.java)
@@ -114,46 +144,65 @@ public class KotlinFutureTestingExtension(
             .also { if (it.isEmpty()) error("No Kotlin EAP versions found") }
     }
 
-    public val isEap: Boolean by lazy {
-        futureProp().isEap
-    }
-
-    public val isBootstrap: Boolean by lazy {
+    internal val isBootstrap: Boolean by lazy {
         futureProp().isBootstrap
     }
 
-    public val isFuture: Boolean by lazy {
+    internal val isFuture: Boolean by lazy {
         futureProp().isFuture
     }
 
-    private fun futureProp(): KotlinFutureVersion {
+    private fun futureProp(): KotlinFutureVersionProp {
         if (disabled)
-            return KotlinFutureVersion.None
+            return KotlinFutureVersionProp.None
         bootstrapProp.orNull?.let {
-            return KotlinFutureVersion.Bootstrap(it)
+            return KotlinFutureVersionProp.Bootstrap(it)
         }
         eapProp.orNull?.let {
-            return KotlinFutureVersion.Eap(it)
+            return KotlinFutureVersionProp.Eap(it)
         }
-        return KotlinFutureVersion.None
+        return KotlinFutureVersionProp.None
     }
 
-    private fun List<String>.firstMatching(filters: List<(String) -> Boolean>): String {
+    private fun List<String>.matching(filters: List<(String) -> Boolean>): List<String> {
         logger.debug("Checking filters on versions $this")
-        return firstOrNull { str -> filters.all { it(str) } } ?: error("No version matching filters.  Versions: $this")
+        return filter { str -> filters.all { it(str) } }.ifEmpty { error("No version matching filters.  Versions: $this") }
     }
 
-    internal val futureVersion: KotlinFutureVersion by lazy {
+    private var preferredClamping: VersionClamping? = null
+    private var clamping = VersionClamping.None
 
+    internal var oldKotlinVersion: String? = null
+
+    internal val version by lazy {
+        val prop = futureProp()
+        KotlinFutureTestingVersion(
+            prop.versionKind,
+            futureVersion(prop)
+        )
+    }
+
+    private fun futureVersion(prop: KotlinFutureVersionProp): String {
+        val oldVersion = oldKotlinVersion ?: error("No Kotlin version found, did you use any Kotlin plugins?")
+        if (!isFuture)
+            return oldVersion
+
+        val futureVersions = futureVersions(prop)
+
+        val preferred = preferredClamping?.matchingOrNull(oldVersion, prop.versionKind, futureVersions)
+
+        return preferred ?: clamping.matching(oldVersion, prop.versionKind, futureVersions)
+    }
+
+    private fun futureVersions(prop: KotlinFutureVersionProp): List<String> {
         if (disabled)
-            return@lazy KotlinFutureVersion.None
+            return emptyList()
 
         if (eapProp.isPresent && bootstrapProp.isPresent)
             logger.warn("Both Kotlin EAP and bootstrap versions are configured, using bootstrap")
 
-        val prop = futureProp()
-        if (prop is KotlinFutureVersion.None)
-            return@lazy KotlinFutureVersion.None
+        if (prop is KotlinFutureVersionProp.None)
+            return emptyList()
 
         logger.debug("Looking up Kotlin future versions for version: \"$prop\"")
 
@@ -163,19 +212,15 @@ public class KotlinFutureTestingExtension(
 
         if (!isLatest) {
             logger.info("Kotlin future version is exact, using $prop")
-            return@lazy prop
+            return listOf(prop.version!!)
         }
 
         logger.debug("Looking up latest version")
 
-        when (prop) {
-            is KotlinFutureVersion.Bootstrap -> KotlinFutureVersion.Bootstrap(
-                latestBootstrapVersions().firstMatching(bootstrapFilters)
-            )
-            is KotlinFutureVersion.Eap -> KotlinFutureVersion.Eap(
-                latestEapVersions().firstMatching(eapFilters)
-            )
-            KotlinFutureVersion.None -> KotlinFutureVersion.None
+        return when (prop) {
+            is KotlinFutureVersionProp.Bootstrap -> latestBootstrapVersions().matching(bootstrapFilters)
+            is KotlinFutureVersionProp.Eap -> latestEapVersions().matching(eapFilters)
+            KotlinFutureVersionProp.None -> emptyList()
         }.also {
             logger.info("Found Kotlin future version $it")
         }
@@ -189,6 +234,6 @@ public class KotlinFutureTestingExtension(
         force: Boolean = false,
         block: GithubWorkflowGenerator.() -> Unit
     ) {
-        GithubWorkflowGenerator(jdk, runner, scheduling, baseDir, force, reportICEs).apply(block)
+        GithubWorkflowGenerator(jdk, runner, scheduling, baseDir, force).apply(block)
     }
 }

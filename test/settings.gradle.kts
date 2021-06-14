@@ -9,7 +9,9 @@ plugins {
 }
 
 kotlinFutureTesting {
-//    reportICEs = true
+    requireSameFeatureVersion()
+    preferSameIncrementalVersion()
+
 //    generateGithubWorkflows { both() }
 }
 

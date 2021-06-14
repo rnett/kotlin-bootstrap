@@ -18,10 +18,10 @@ public class KotlinFutureTestingPlugin : Plugin<Settings> {
         )
 
         settings.gradle.settingsEvaluated {
-            if (extension.reportICEs) {
+            if (extension.isFuture) {
                 settings.gradle.taskGraph.addTaskExecutionListener(
                     IceListener(
-                        File(settings.rootDir, ".kotlin-future-testing-ICE-report"),
+                        File(settings.rootDir, "build/kotlin-future-testing-ICE-report"),
                         settings.providers.gradleProperty("reportICEs").forUseAtConfigurationTime()
                     )
                 )
@@ -32,7 +32,7 @@ public class KotlinFutureTestingPlugin : Plugin<Settings> {
         settings.extensions.add(kotlinFutureTestingExtension, extension)
 
         settings.gradle.beforeProject {
-            extensions.extraProperties[kotlinFutureVersionProp] = extension.futureVersion
+            extensions.extraProperties[kotlinFutureVersionProp] = lazy { extension.version }
 
             if (extension.substituteDependencies) {
                 configurations.configureEach {
@@ -40,7 +40,7 @@ public class KotlinFutureTestingPlugin : Plugin<Settings> {
                         eachDependency {
                             if (extension.isFuture) {
                                 if (target.group == "org.jetbrains.kotlin" || target.group.startsWith("org.jetbrains.kotlin.")) {
-                                    val version = extension.futureVersion.version!!
+                                    val version = extension.version.version
 
                                     logger.info("Using future version $version for dependency $target")
 
@@ -66,9 +66,15 @@ public class KotlinFutureTestingPlugin : Plugin<Settings> {
         settings.pluginManagement {
             resolutionStrategy {
                 eachPlugin {
-                    if (extension.isFuture) {
-                        if (target.id.id.startsWith("org.jetbrains.kotlin.")) {
-                            val version = extension.futureVersion.version!!
+                    if (target.id.id.startsWith("org.jetbrains.kotlin.")) {
+                        val oldVersion = target.version
+                        if (oldVersion != null && (extension.oldKotlinVersion == null || oldVersion > extension.oldKotlinVersion!!)) {
+                            logger.info("Found old kotlin version $oldVersion")
+                            extension.oldKotlinVersion = oldVersion
+                        }
+
+                        if (extension.isFuture) {
+                            val version = extension.version.version
                             logger.info("Using bootstrap version $version for plugin ${target.id.id}")
                             useVersion(version)
                         }

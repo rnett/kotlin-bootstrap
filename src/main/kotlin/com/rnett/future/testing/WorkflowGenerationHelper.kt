@@ -8,8 +8,7 @@ public class GithubWorkflowGenerator(
     private val runner: String,
     private val scheduling: Scheduling?,
     private val baseDir: File,
-    private val force: Boolean,
-    private val reportICEs: Boolean
+    private val force: Boolean
 ) {
 
     public fun bootstrap(
@@ -121,13 +120,11 @@ ${steps.replaceIndent("      ")}
     name: Compile with Kotlin $key
     runs-on: ${runner}
     continue-on-error: true
-    ${if (!reportICEs) "needs: test-no-$key" else ""}
-    ${if (!reportICEs) "if: ${sign}{{ needs.test-no-$key.result == 'success' }}" else ""}
     outputs:
-      was-ice: ${sign}{{ steps.was-ice.files_exists }}
+      was-ice: ${sign}{{ steps.was-ice.outputs.files_exists }}
     env:
       ORG_GRADLE_PROJECT_kotlin${key.capitalize()}: "latest"
-      ${if (reportICEs) "ORG_GRADLE_PROJECT_reportICEs: \"true\"" else ""}
+      ORG_GRADLE_PROJECT_reportICEs: "true"
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK ${jdk}
@@ -139,34 +136,14 @@ ${steps.replaceIndent("      ")}
         run: chmod +x gradlew
 
 ${steps.replaceIndent("      ")}
-"""
-            )
-
-            // language=yml
-            if (reportICEs) {
-                append(
-                    """
-
-      - name: Check for ICE report
-        if: ${sign}{{ failure() }}
-        id: was-ice
-        uses: andstor/file-existence-action@v1
-        with:
-          files: ".kotlin-future-testing-ICE-report"
 
       - name: Archive ICE report
         uses: actions/upload-artifact@v2
-        if: ${sign}{{ failure() && steps.was-ice.files_exists == 'true' }}
+        if: ${sign}{{ failure() }}
         with:
           name: future-ice-report
-          path: .kotlin-future-testing-ICE-report
-"""
-                )
-            }
-
-            // language=yml
-            append(
-                """
+          path: build/kotlin-future-testing-ICE-report
+        
   check-results:
     name: Results
     needs: [test-no-$key, test-kotlin-$key]
@@ -177,39 +154,12 @@ ${steps.replaceIndent("      ")}
         if: ${sign}{{ needs.test-no-$key.result != 'success' }}
         run: echo "::warning::Compilation without $key failed, aborting"
         
-      - name: ${key.capitalize()} Compile failed
+      - name: Only ${key.capitalize()} Compile failed
         if:  ${sign}{{ needs.test-no-$key.result == 'success' && needs.test-kotlin-$key.result != 'success' }}
         run: echo "::error::Compilation with Kotlin $key failed"
                 
                 """
             )
-            // language=yml
-            if (reportICEs) {
-                append(
-                    """
-      - name: Download ICE report
-        if: ${sign}{{ needs.test-kotlin$key.was-ice }}
-        uses: actions/download-artifact@v2
-        with:
-          name: future-ice-report
-      - name: Save git info
-        if: ${sign}{{ needs.test-kotlin$key.was-ice }}
-        run: |
-          'echo "Workflow: ${sign}{{ github.repository }}/${sign}{{ github.workflow }}#${sign}{{ github.run_number }}" >> .kotlin-future-testing-run-info'
-          'echo "Git Ref: ${sign}{{ github.ref }}, SHA: ${sign}{{ github.sha }}" >> .kotlin-future-testing-run-info'
-          'echo "Run ID: ${sign}{{ github.run_id }}" >> .kotlin-future-testing-run-info'
-      
-      - name: Archive ICE report
-        uses: actions/upload-artifact@v2
-        if: ${sign}{{ needs.test-kotlin$key.was-ice }}
-        with:
-          name: future-ice-report
-          path: |
-            .kotlin-future-testing-ICE-report
-            .kotlin-future-testing-run-info
-                """
-                )
-            }
 
         })
     }
