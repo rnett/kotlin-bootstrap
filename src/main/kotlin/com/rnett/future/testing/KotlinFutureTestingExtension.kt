@@ -224,8 +224,14 @@ public class KotlinFutureTestingExtension(
             is KotlinFutureVersionProp.Bootstrap -> latestBootstrapVersions().matching(bootstrapFilters)
             is KotlinFutureVersionProp.Eap -> latestEapVersions().matching(eapFilters)
             KotlinFutureVersionProp.None -> emptyList()
-        }.filter { it > oldKotlinVersion() }.also {
-            logger.info("Found Kotlin future versions $it")
+        }.filter { it > oldKotlinVersion() }.let {
+            if (it.isEmpty()) {
+                logger.warn("No future versions found for kind ${prop.versionKind}, using current version $oldKotlinVersion()")
+                listOf(oldKotlinVersion())
+            } else {
+                logger.info("Found Kotlin future versions $it")
+                it
+            }
         }
     }
 
