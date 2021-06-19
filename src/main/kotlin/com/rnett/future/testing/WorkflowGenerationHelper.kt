@@ -77,7 +77,7 @@ public class GithubWorkflowGenerator(
         eap(gradleCommand, suffix)
     }
 
-    public fun both(
+    public fun bothCommands(
         vararg commands: String,
         suffix: String = ""
     ) {
