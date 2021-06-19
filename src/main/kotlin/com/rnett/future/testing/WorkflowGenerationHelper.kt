@@ -14,68 +14,101 @@ public class GithubWorkflowGenerator(
 ) {
 
     public fun bootstrap(
-        gradleCommand: String = "assemble"
+        gradleCommand: String = "assemble",
+        suffix: String = ""
     ) {
-        bootstrap(listOf("./gradlew $gradleCommand"))
+        bootstrapCommands("./gradlew $gradleCommand", suffix = suffix)
     }
 
-    public fun bootstrap(commands: List<String>) {
+    public fun bootstrapCommands(
+        vararg commands: String,
+        suffix: String = ""
+    ) {
         bootstrapCustom(
             """
                 - name: Compile
                   run: |
                     ${commands.joinToString("\n")}
-            """.trimIndent()
+            """.trimIndent(),
+            suffix
         )
     }
 
-    public fun bootstrapCustom(@Language("yml") steps: String) {
-        generateCustomGithubWorkflow(steps, false)
+    public fun bootstrapCustom(
+        @Language("yml") steps: String,
+        suffix: String = ""
+    ) {
+        generateCustomGithubWorkflow(steps, false, suffix)
     }
 
     public fun eap(
-        gradleCommand: String = "assemble"
+        gradleCommand: String = "assemble",
+        suffix: String = ""
     ) {
-        eap(listOf("./gradlew $gradleCommand"))
+        eapCommands("./gradlew $gradleCommand", suffix = suffix)
     }
 
-    public fun eap(commands: List<String>) {
+    public fun eapCommands(
+        vararg commands: String,
+        suffix: String = ""
+    ) {
         eapCustom(
             """
                 - name: Compile
                   run: |
                     ${commands.joinToString("\n")}
-            """.trimIndent()
+            """.trimIndent(),
+            suffix
         )
     }
 
-    public fun eapCustom(@Language("yml") steps: String) {
-        generateCustomGithubWorkflow(steps, true)
+    public fun eapCustom(
+        @Language("yml") steps: String,
+        suffix: String = ""
+    ) {
+        generateCustomGithubWorkflow(steps, true, suffix)
     }
 
-    public fun both(gradleCommand: String = "assemble") {
-        bootstrap(gradleCommand)
-        eap(gradleCommand)
+    public fun both(
+        gradleCommand: String = "assemble",
+        suffix: String = ""
+    ) {
+        bootstrap(gradleCommand, suffix)
+        eap(gradleCommand, suffix)
     }
 
-    public fun both(commands: List<String>) {
-        bootstrap(commands)
-        eap(commands)
+    public fun both(
+        vararg commands: String,
+        suffix: String = ""
+    ) {
+        bootstrapCommands(*commands, suffix = suffix)
+        eapCommands(*commands, suffix = suffix)
     }
 
-    public fun bothCustom(@Language("yml") steps: String) {
-        bootstrapCustom(steps)
-        eapCustom(steps)
+    public fun bothCustom(
+        @Language("yml") steps: String,
+        suffix: String = ""
+    ) {
+        bootstrapCustom(steps, suffix)
+        eapCustom(steps, suffix)
     }
 
     private fun generateCustomGithubWorkflow(
         @Language("yml") steps: String,
-        isEap: Boolean
+        isEap: Boolean,
+        suffix: String
     ) {
 
         val key = if (isEap) "eap" else "bootstrap"
 
-        val file = File(baseDir, ".github/workflows/kotlin-$key-test.yml")
+        val fileName = "kotlin-$key-test".let {
+            if (suffix.isNotBlank())
+                "$it-$suffix"
+            else
+                it
+        }
+
+        val file = File(baseDir, ".github/workflows/$fileName.yml")
         if (file.exists()) {
             if (!force)
                 return
@@ -89,7 +122,7 @@ public class GithubWorkflowGenerator(
             // language=yml
             appendLine(
                 """
-                name: Kotlin ${key.capitalize()} Test
+                name: Kotlin ${key.capitalize()} Test ${suffix.capitalize()}
                 on:
                   workflow_dispatch:
                     inputs:
