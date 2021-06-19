@@ -192,7 +192,7 @@ ${steps.replaceIndent("      ")}
         run: echo "::warning::Compilation without $key failed, aborting"
         
       - name: Only ${key.capitalize()} Compile failed
-        if:  ${sign}{{ needs.test-no-$key.result == 'success' && needs.test-kotlin-$key.result != 'success' }}
+        if: ${sign}{{ needs.test-no-$key.result == 'success' && needs.test-kotlin-$key.result != 'success' }}
         run: echo "::error::Compilation with Kotlin $key failed"
                 
                 """
