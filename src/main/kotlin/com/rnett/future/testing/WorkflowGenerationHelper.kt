@@ -138,33 +138,26 @@ public class GithubWorkflowGenerator(
             }
 
             // language=yml
-            val checkout = if (branch != null) {
-                """
+            val checkout = """
       - name: Checkout default branch
         uses: actions/checkout@v2
-        
-        ${
-                    if (scheduling != null) """
-      - name: Checkout branch for scheduled
-        if: github.event_name == 'schedule'
-        uses: actions/checkout@v2
-        with:
-          ref: $branch
-          """ else ""
-                }
           
-      - name: Checkout branch for manual
+      - name: Checkout target branch for manual
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.branch != ''
         uses: actions/checkout@v2
         with:
           ref: ${sign}{{ github.event.inputs.branch }}
-                """
-            } else {
-                """
-      - name: Checkout
+        
+        ${
+                if (scheduling != null) """
+      - name: Checkout target branch for scheduled
+        if: github.event_name == 'schedule'
         uses: actions/checkout@v2
-                """
+        with:
+          ref: $branch
+""" else ""
             }
+                """
 
             // language=yml
             append(
