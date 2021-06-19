@@ -229,14 +229,25 @@ public class KotlinFutureTestingExtension(
         }
     }
 
+    /**
+     * Configure GitHub workflow generation
+     *
+     * @param jdk the JDK version to use
+     * @param runner the GitHub Actions runner OS to use
+     * @param scheduling how often to schedule runs, or `null` to not schedule any
+     * @param baseDir the git root, workflows will be generated in `$baseDir/.github/workflows`.
+     * @param branch the branch to use for scheduled runs
+     * @param force whether to overwrite existing workflows of the same name (`kotlin-${bootstrap|eap}-test.yml`)
+     */
     public inline fun generateGithubWorkflows(
         jdk: String = "15",
         runner: String = "ubuntu-latest",
         scheduling: Scheduling? = Scheduling.Weekly(),
         baseDir: File = rootProjectDir,
+        branch: String? = null,
         force: Boolean = false,
         block: GithubWorkflowGenerator.() -> Unit
     ) {
-        GithubWorkflowGenerator(jdk, runner, scheduling, baseDir, force).apply(block)
+        GithubWorkflowGenerator(jdk, runner, scheduling, baseDir, branch, force).apply(block)
     }
 }

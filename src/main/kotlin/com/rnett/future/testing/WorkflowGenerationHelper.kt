@@ -3,11 +3,13 @@ package com.rnett.future.testing
 import org.intellij.lang.annotations.Language
 import java.io.File
 
+//TODO branch for non-manual (two checkout actions, one w/ branch one w/o?  or manually check out if non?)
 public class GithubWorkflowGenerator(
     private val jdk: String,
     private val runner: String,
     private val scheduling: Scheduling?,
     private val baseDir: File,
+    private val branch: String?,
     private val force: Boolean
 ) {
 
@@ -84,16 +86,51 @@ public class GithubWorkflowGenerator(
         val sign = "\$"
 
         file.writeText(buildString {
+            // language=yml
             appendLine(
                 """
                 name: Kotlin ${key.capitalize()} Test
                 on:
                   workflow_dispatch:
+                    inputs:
+                      branch:
+                        description: "Target branch"
+                        required: false
+                        default: '${branch ?: ""}'
             """.trimIndent()
             )
             if (scheduling != null) {
                 appendLine("  schedule:")
                 appendLine("    - cron: \"${scheduling.cron}\"")
+            }
+
+            // language=yml
+            val checkout = if (branch != null) {
+                """
+      - name: Checkout default branch
+        uses: actions/checkout@v2
+        
+        ${
+                    if (scheduling != null) """
+      - name: Checkout branch for scheduled
+        if: github.event_name == 'schedule'
+        uses: actions/checkout@v2
+        with:
+          ref: $branch
+          """ else ""
+                }
+          
+      - name: Checkout branch for manual
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.branch != ''
+        uses: actions/checkout@v2
+        with:
+          ref: ${sign}{{ github.event.inputs.branch }}
+                """
+            } else {
+                """
+      - name: Checkout
+        uses: actions/checkout@v2
+                """
             }
 
             // language=yml
@@ -103,9 +140,9 @@ jobs:
   test-no-$key:
     name: Compile normally
     runs-on: ${runner}
-    continue-on-error: true
     steps:
-      - uses: actions/checkout@v2
+$checkout
+        
       - name: Set up JDK ${jdk}
         uses: actions/setup-java@v1
         with:
@@ -119,14 +156,14 @@ ${steps.replaceIndent("      ")}
   test-kotlin-$key:
     name: Compile with Kotlin $key
     runs-on: ${runner}
-    continue-on-error: true
     outputs:
       was-ice: ${sign}{{ steps.was-ice.outputs.files_exists }}
     env:
       ORG_GRADLE_PROJECT_kotlin${key.capitalize()}: "latest"
       ORG_GRADLE_PROJECT_reportICEs: "true"
     steps:
-      - uses: actions/checkout@v2
+$checkout
+
       - name: Set up JDK ${jdk}
         uses: actions/setup-java@v1
         with:

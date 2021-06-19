@@ -38,9 +38,6 @@ private fun gitDir(start: File): File? {
 
 private val remoteRegex = Regex("\\[remote \"([^\"]+)\"\\]\n\\s+url = ([^\n]+)\n", RegexOption.MULTILINE)
 
-//TODO make ICE reports in gradle, w/ git info.  Can send from here easier.
-//  then accumulate + make artifact
-//   I would like to get the remote for this commit, not sure I can if it's floating
 internal fun gitRemotes(root: File): Map<String, String>? {
     if (GithubEnv.isGithub) {
         return mapOf("origin" to "https://github.com/${GithubEnv.repository}.git")
