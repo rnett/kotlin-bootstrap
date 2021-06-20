@@ -9,7 +9,7 @@ plugins {
     `kotlin-dsl`
 }
 
-version = "0.0.11-SNAPSHOT"
+version = "0.0.12-SNAPSHOT"
 group = "com.github.rnett.kotlin-future-testing"
 description = "A Gradle settings plugin to use Kotlin future versions"
 

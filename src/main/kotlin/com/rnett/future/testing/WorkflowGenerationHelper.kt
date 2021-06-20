@@ -3,75 +3,96 @@ package com.rnett.future.testing
 import org.intellij.lang.annotations.Language
 import java.io.File
 
-//TODO branch for non-manual (two checkout actions, one w/ branch one w/o?  or manually check out if non?)
+//TODO matrix (multiple runners)
+//TODO make old version accessible in filters
+//TODO use suffix more in workflow strings/names
 public class GithubWorkflowGenerator(
     private val jdk: String,
-    private val runner: String,
+    private val runners: List<String>,
     private val scheduling: Scheduling?,
     private val baseDir: File,
     private val branch: String?,
     private val force: Boolean
 ) {
 
+    private val commonSteps = mutableListOf<String>()
+
+    init {
+        require(runners.isNotEmpty()) { "Must specify at least one runner OS" }
+    }
+
+    public fun commonCommands(vararg commands: String, name: String = "Common Setup", id: String? = null) {
+        commonStep(buildString {
+            appendLine("- name: $name")
+            if (id != null)
+                append("  id: $id")
+            appendLine("  run: |")
+            commands.forEach {
+                appendLine("    $it")
+            }
+        })
+    }
+
+    public fun commonStep(@Language("yml") steps: String) {
+        commonSteps += steps
+    }
+
     public fun bootstrap(
         gradleCommand: String = "assemble",
-        suffix: String = ""
+        suffix: String = "compile"
     ) {
         bootstrapCommands("./gradlew $gradleCommand", suffix = suffix)
     }
 
-    public fun bootstrapCommands(
-        vararg commands: String,
-        suffix: String = ""
-    ) {
-        bootstrapCustom(
-            """
+    private fun stepFor(commands: Array<out String>): String = """
                 - name: Compile
                   run: |
-                    ${commands.joinToString("\n")}
-            """.trimIndent(),
+${commands.joinToString("\n").replaceIndent("                    ")}""".trimIndent()
+
+    public fun bootstrapCommands(
+        vararg commands: String,
+        suffix: String = "compile"
+    ) {
+        bootstrapCustom(
+            stepFor(commands),
             suffix
         )
     }
 
     public fun bootstrapCustom(
         @Language("yml") steps: String,
-        suffix: String = ""
+        suffix: String = "compile"
     ) {
         generateCustomGithubWorkflow(steps, false, suffix)
     }
 
     public fun eap(
         gradleCommand: String = "assemble",
-        suffix: String = ""
+        suffix: String = "compile"
     ) {
         eapCommands("./gradlew $gradleCommand", suffix = suffix)
     }
 
     public fun eapCommands(
         vararg commands: String,
-        suffix: String = ""
+        suffix: String = "compile"
     ) {
         eapCustom(
-            """
-                - name: Compile
-                  run: |
-                    ${commands.joinToString("\n")}
-            """.trimIndent(),
+            stepFor(commands),
             suffix
         )
     }
 
     public fun eapCustom(
         @Language("yml") steps: String,
-        suffix: String = ""
+        suffix: String = "compile"
     ) {
         generateCustomGithubWorkflow(steps, true, suffix)
     }
 
     public fun both(
         gradleCommand: String = "assemble",
-        suffix: String = ""
+        suffix: String = "compile"
     ) {
         bootstrap(gradleCommand, suffix)
         eap(gradleCommand, suffix)
@@ -79,7 +100,7 @@ public class GithubWorkflowGenerator(
 
     public fun bothCommands(
         vararg commands: String,
-        suffix: String = ""
+        suffix: String = "compile"
     ) {
         bootstrapCommands(*commands, suffix = suffix)
         eapCommands(*commands, suffix = suffix)
@@ -87,7 +108,7 @@ public class GithubWorkflowGenerator(
 
     public fun bothCustom(
         @Language("yml") steps: String,
-        suffix: String = ""
+        suffix: String = "compile"
     ) {
         bootstrapCustom(steps, suffix)
         eapCustom(steps, suffix)
@@ -101,7 +122,7 @@ public class GithubWorkflowGenerator(
 
         val key = if (isEap) "eap" else "bootstrap"
 
-        val fileName = "kotlin-$key-test".let {
+        val fileName = "kotlin-$key".let {
             if (suffix.isNotBlank())
                 "$it-$suffix"
             else
@@ -118,11 +139,14 @@ public class GithubWorkflowGenerator(
 
         val sign = "\$"
 
+        val keyName = key.capitalize()
+        val suffixName = suffix.capitalize()
+
         file.writeText(buildString {
             // language=yml
             appendLine(
                 """
-                name: Kotlin ${key.capitalize()} Test ${suffix.capitalize()}
+                name: Kotlin $keyName $suffixName
                 on:
                   workflow_dispatch:
                     inputs:
@@ -159,13 +183,32 @@ public class GithubWorkflowGenerator(
             }
                 """
 
+
+            // language=yml
+            val runner = if (runners.size == 1)
+                "runs-on: ${runners[0]}"
+            else
+                """
+            strategy:
+              matrix:
+                os: [ ${runners.joinToString(",  ")} ]
+              fail-fast: false
+            runs-on: ${sign}{{ matrix.os }}
+        """.trimIndent()
+
+            val iceArtifactName = if (runners.size == 1) {
+                "kotlin-future-ICE-report"
+            } else {
+                "kotlin-future-ICE-report-\${{ matrix.os }}"
+            }
+
             // language=yml
             append(
                 """
 jobs:
-  test-no-$key:
-    name: Compile normally
-    runs-on: ${runner}
+  try-no-$key:
+    name: $suffixName normally
+${runner.replaceIndent("    ")}
     steps:
 $checkout
         
@@ -177,15 +220,15 @@ $checkout
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+${commonSteps.joinToString("\n\n").replaceIndent("      ")}
+
 ${steps.replaceIndent("      ")}
 
-  test-kotlin-$key:
-    name: Compile with Kotlin $key
-    runs-on: ${runner}
-    outputs:
-      was-ice: ${sign}{{ steps.was-ice.outputs.files_exists }}
+  try-kotlin-$key:
+    name: $suffixName with Kotlin $key
+${runner.replaceIndent("    ")}
     env:
-      ORG_GRADLE_PROJECT_kotlin${key.capitalize()}: "latest"
+      ORG_GRADLE_PROJECT_kotlin$keyName: "latest"
       ORG_GRADLE_PROJECT_reportICEs: "true"
     steps:
 $checkout
@@ -198,28 +241,30 @@ $checkout
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+${commonSteps.joinToString("\n\n").replaceIndent("      ")}
+
 ${steps.replaceIndent("      ")}
 
       - name: Archive ICE report
         uses: actions/upload-artifact@v2
         if: ${sign}{{ failure() }}
         with:
-          name: kotlin-future-ICE-report
+          name: $iceArtifactName
           path: build/kotlin-future-testing-ICE-report
         
   check-results:
     name: Results
-    needs: [test-no-$key, test-kotlin-$key]
+    needs: [try-no-$key, try-kotlin-$key]
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - name: Original Compile Failed
-        if: ${sign}{{ needs.test-no-$key.result != 'success' }}
+      - name: Original $suffixName Failed
+        if: ${sign}{{ needs.try-no-$key.result != 'success' }}
         run: echo "::warning::Compilation without $key failed, aborting"
         
-      - name: Only ${key.capitalize()} Compile failed
-        if: ${sign}{{ needs.test-no-$key.result == 'success' && needs.test-kotlin-$key.result != 'success' }}
-        run: echo "::error::Compilation with Kotlin $key failed"
+      - name: Only $keyName $suffixName failed
+        if: ${sign}{{ needs.try-no-$key.result == 'success' && needs.try-kotlin-$key.result != 'success' }}
+        run: echo "::error::$suffixName with Kotlin $key failed"
                 
                 """
             )

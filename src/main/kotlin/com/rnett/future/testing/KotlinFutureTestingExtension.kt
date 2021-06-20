@@ -85,6 +85,7 @@ public class KotlinFutureTestingExtension(
     private val bootstrapFilters = mutableListOf<(String) -> Boolean>()
     private val eapFilters = mutableListOf<(String) -> Boolean>()
 
+    //TODO make old version accessible in filters
     /**
      * Apply a filter to the bootstrap versions.
      * This is always applied, even when the version is specified via property.
@@ -239,7 +240,7 @@ public class KotlinFutureTestingExtension(
      * Configure GitHub workflow generation
      *
      * @param jdk the JDK version to use
-     * @param runner the GitHub Actions runner OS to use
+     * @param runner the GitHub Actions runner OSs to use.  Multiple OSs will be done in a matrix.  Must have at least one element.
      * @param scheduling how often to schedule runs, or `null` to not schedule any
      * @param baseDir the git root, workflows will be generated in `$baseDir/.github/workflows`.
      * @param branch the branch to use for scheduled runs
@@ -247,13 +248,13 @@ public class KotlinFutureTestingExtension(
      */
     public inline fun generateGithubWorkflows(
         jdk: String = "15",
-        runner: String = "ubuntu-latest",
+        runners: List<String> = listOf("ubuntu-latest"),
         scheduling: Scheduling? = Scheduling.Weekly(),
         baseDir: File = rootProjectDir,
         branch: String? = null,
         force: Boolean = false,
         block: GithubWorkflowGenerator.() -> Unit
     ) {
-        GithubWorkflowGenerator(jdk, runner, scheduling, baseDir, branch, force).apply(block)
+        GithubWorkflowGenerator(jdk, runners, scheduling, baseDir, branch, force).apply(block)
     }
 }
