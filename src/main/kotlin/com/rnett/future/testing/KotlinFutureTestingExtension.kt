@@ -126,7 +126,7 @@ public class KotlinFutureTestingExtension internal constructor(
      *
      * These reports will automatically be made artifacts by the generated Github workflows.
      */
-    internal var reportICEs: ReportICEs = ReportICEs.Always
+    public var reportICEs: ReportICEs = ReportICEs.Always
 
     /**
      * If `true` (as it is by default), will substitute non-plugin dependencies with groups
