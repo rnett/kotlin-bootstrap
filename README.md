@@ -13,6 +13,10 @@ Plugin: `com.github.rnett.kotlin-future-testing`
 
 Will not work if you are using multiple Kotlin versions.
 
+### [Docs](https://rnett.github.io/kotlin-future-testing/release/)
+
+[For latest SNAPSHOT build](https://rnett.github.io/kotlin-future-testing/snapshot/)
+
 ## Usage
 
 Apply the plugin to your settings file.
