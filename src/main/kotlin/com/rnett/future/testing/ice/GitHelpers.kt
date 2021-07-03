@@ -26,7 +26,7 @@ internal object GithubEnv {
     val isGithub get() = System.getenv("GITHUB_WORKFLOW") != null
 }
 
-private fun gitDir(start: File): File? {
+internal fun gitDir(start: File): File? {
     var root = start.canonicalFile
     while (!File(root, ".git").exists()) {
         val parent = root.parentFile ?: return null
@@ -38,21 +38,21 @@ private fun gitDir(start: File): File? {
 
 private val remoteRegex = Regex("\\[remote \"([^\"]+)\"\\]\n\\s+url = ([^\n]+)\n", RegexOption.MULTILINE)
 
-internal fun gitRemotes(root: File): Map<String, String>? {
+internal fun gitRemotes(gitDir: File?): Map<String, String>? {
     if (GithubEnv.isGithub) {
         return mapOf("origin" to "https://github.com/${GithubEnv.repository}.git")
     } else {
-        val gitDir = gitDir(root) ?: return null
+        if (gitDir == null) return null
         val config = File(gitDir, "config").readText()
         return remoteRegex.findAll(config).associate { it.groupValues[1] to it.groupValues[2] }
     }
 }
 
-internal fun gitRef(root: File): String? {
+internal fun gitRef(gitDir: File?): String? {
     if (GithubEnv.isGithub) {
         return GithubEnv.sha + " " + GithubEnv.ref
     } else {
-        val gitDir = gitDir(root) ?: return null
+        if (gitDir == null) return null
         val head = File(gitDir, "HEAD").readText()
 
         return if (head.startsWith("ref: ")) {

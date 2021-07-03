@@ -34,6 +34,7 @@ internal class IceListener(
     @Serializable
     class Report(
         val rootProjectName: String,
+        val rootProjectPathFromGitRoot: String?,
         val taskPath: String,
         val taskInputs: Map<String, String>,
         val kotlinVersion: String,
@@ -45,6 +46,9 @@ internal class IceListener(
     ) {
         fun humanReadable(): String = buildString {
             appendLine("Root Project: $rootProjectName")
+            rootProjectPathFromGitRoot?.let {
+                appendLine("Root Project path from Git root: $it")
+            }
             appendLine("Task: $taskPath")
             appendLine("Task input properties: $taskInputs")
             appendLine("Kotlin version: $kotlinVersion")
@@ -80,16 +84,22 @@ internal class IceListener(
         if (exception != null &&
             "Internal compiler error" in exception.cause?.message.orEmpty()
         ) {
+            val gitDir = gitDir(task.project.rootDir)
+            val rootRelPath = gitDir?.let {
+                task.project.rootDir.relativeTo(it.parentFile).path
+            }
+
             @Suppress("UNCHECKED_CAST")
             val report = Report(
                 task.project.rootProject.name,
+                rootRelPath,
                 task.path,
                 task.inputs.properties.mapValues { (it.value as Any?).toString() },
                 task.project.kotlinFutureVersion.version,
                 task.project.kotlinFutureVersion.versionKind.name,
                 stderr,
-                gitRef(task.project.projectDir),
-                gitRemotes(task.project.projectDir),
+                gitRef(gitDir),
+                gitRemotes(gitDir),
                 GithubEnv.runUrl
             )
             val fileName = "${task.project.rootProject.name}:${task.path.trim(':')}".replace(":", "$")
