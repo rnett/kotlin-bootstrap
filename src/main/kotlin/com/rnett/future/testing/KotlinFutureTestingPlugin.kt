@@ -64,7 +64,7 @@ public class KotlinFutureTestingPlugin : Plugin<Settings> {
         }
 
         settings.gradle.settingsEvaluated {
-            settings.pluginManagement {
+            pluginManagement {
                 resolutionStrategy {
                     eachPlugin {
                         if (target.id.id.startsWith("org.jetbrains.kotlin.")) {
