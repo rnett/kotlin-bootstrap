@@ -74,44 +74,38 @@ gradlePlugin {
     }
 }
 
-afterEvaluate {
-    apply(plugin = "org.jetbrains.dokka")
-    apply(plugin = "org.gradle.maven-publish")
-    apply(plugin = "com.vanniktech.maven.publish")
-    val project = this
+extensions.getByType<com.vanniktech.maven.publish.MavenPublishBaseExtension>().apply {
+    if (!version.toString().toLowerCase().endsWith("snapshot")) {
+        val stagingProfileId = project.findProperty("sonatypeRepositoryId")?.toString()
+        println("Publishing to $stagingProfileId")
+        publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.DEFAULT, stagingProfileId)
+    }
 
-    extensions.getByType<com.vanniktech.maven.publish.MavenPublishBaseExtension>().apply {
-        if (!version.toString().toLowerCase().endsWith("snapshot")) {
-            val stagingProfileId = project.findProperty("sonatypeRepositoryId")?.toString()
-            publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.DEFAULT, stagingProfileId)
+    pom {
+        name.set("Kotlin Future Testing Gradle Plugin")
+        description.set(project.description)
+        inceptionYear.set("2021")
+        url.set("https://github.com/rnett/kotlin-future-testing/")
+
+        licenses {
+            license {
+                name.set("The Apache Software License, Version 2.0")
+                url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                distribution.set("repo")
+            }
         }
 
-        pom {
-            name.set("Kotlin Future Testing Gradle Plugin")
-            description.set(project.description)
-            inceptionYear.set("2021")
-            url.set("https://github.com/rnett/kotlin-future-testing/")
+        scm {
+            url.set("https://github.com/rnett/kotlin-future-testing.git")
+            connection.set("scm:git:git://github.com/rnett/kotlin-future-testing.git")
+            developerConnection.set("scm:git:ssh://git@github.com/rnett/kotlin-future-testing.git")
+        }
 
-            licenses {
-                license {
-                    name.set("The Apache Software License, Version 2.0")
-                    url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
-                    distribution.set("repo")
-                }
-            }
-
-            scm {
-                url.set("https://github.com/rnett/kotlin-future-testing.git")
-                connection.set("scm:git:git://github.com/rnett/kotlin-future-testing.git")
-                developerConnection.set("scm:git:ssh://git@github.com/rnett/kotlin-future-testing.git")
-            }
-
-            developers {
-                developer {
-                    id.set("rnett")
-                    name.set("Ryan Nett")
-                    url.set("https://github.com/rnett/")
-                }
+        developers {
+            developer {
+                id.set("rnett")
+                name.set("Ryan Nett")
+                url.set("https://github.com/rnett/")
             }
         }
     }
