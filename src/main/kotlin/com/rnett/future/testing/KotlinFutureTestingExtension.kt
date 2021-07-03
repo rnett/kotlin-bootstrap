@@ -111,20 +111,56 @@ public class KotlinFutureTestingExtension(
         eapFilters += filter
     }
 
+    /**
+     * Require a future version with the same feature version (i.e. 1.5) as the original version.
+     */
     public fun requireSameFeatureVersion() {
         clamping = VersionClamping.Feature
     }
 
+    /**
+     * Require a future version with the same incremental version (i.e. 1.5.10) as the original version.
+     */
     public fun requireSameIncrementalVersion() {
         clamping = VersionClamping.Incremental
     }
 
+    /**
+     * Prefer a future version with the same feature version (i.e. 1.5) as the original version.
+     */
     public fun preferSameFeatureVersion() {
         preferredClamping = VersionClamping.Feature
     }
 
+    /**
+     * Prefer a future version with the same incremental version (i.e. 1.5.10) as the original version.
+     */
     public fun preferSameIncrementalVersion() {
         preferredClamping = VersionClamping.Incremental
+    }
+
+    private var forceProp: KotlinFutureVersionProp? = null
+
+    /**
+     * Equivalent to setting the `kotlinBootstrap` property, but overrides any property values.
+     *
+     * Useful for fixing issues.
+     *
+     * Does not override [disabled].
+     */
+    public fun forceBootstrap(version: String = "latest") {
+        forceProp = KotlinFutureVersionProp.Bootstrap(version)
+    }
+
+    /**
+     * Equivalent to setting the `kotlinEap` property, but overrides any property values.
+     *
+     * Useful for fixing issues.
+     *
+     * Does not override [disabled].
+     */
+    public fun forceEap(version: String = "latest") {
+        forceProp = KotlinFutureVersionProp.Eap(version)
     }
 
     private val logger = LoggerFactory.getLogger(KotlinFutureTestingPlugin::class.java)
@@ -156,6 +192,9 @@ public class KotlinFutureTestingExtension(
     private fun futureProp(): KotlinFutureVersionProp {
         if (disabled)
             return KotlinFutureVersionProp.None
+
+        forceProp?.let { return it }
+
         bootstrapProp.orNull?.let {
             return KotlinFutureVersionProp.Bootstrap(it)
         }
