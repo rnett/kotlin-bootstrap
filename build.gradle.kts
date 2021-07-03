@@ -44,9 +44,7 @@ kotlin {
 val shadowJar = tasks.shadowJar.apply {
     configure {
         archiveClassifier.set("")
-        relocate("kotlinx.serialization", "com.rnett.future.testing.kotlinx.serialization") {
-            exclude("kotlinx.serialization.Serializable")
-        }
+        relocate("kotlinx.serialization", "com.rnett.future.testing.kotlinx.serialization")
         dependencies {
             exclude(dependency("org.jetbrains.kotlin:kotlin-stdlib.*:.*"))
         }
