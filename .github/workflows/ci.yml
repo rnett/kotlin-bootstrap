@@ -117,7 +117,9 @@ jobs:
             ${{ runner.os }}-test-gradle-
 
       - name: Generate HTML Docs
-        run: ./gradlew dokkaHtml -PsourceLinkBranch=$GITHUB_SHA
+        env:
+          ORG_GRADLE_PROJECT_sourceLinkBranch: ${{ github.sha }}
+        run: ./gradlew dokkaHtml
 
       - name: Generate publishable readme
         run: ./gradlew generateReadme

@@ -101,33 +101,35 @@ afterEvaluate {
 
 val sourceLinkBranch: String by project
 
-tasks.withType<org.jetbrains.dokka.gradle.AbstractDokkaTask>() {
+afterEvaluate {
+    tasks.withType<org.jetbrains.dokka.gradle.AbstractDokkaTask>() {
 
-    val dokkaSourceSets = when (this) {
-        is org.jetbrains.dokka.gradle.DokkaTask -> dokkaSourceSets
-        is org.jetbrains.dokka.gradle.DokkaTaskPartial -> dokkaSourceSets
-        else -> return@withType
-    }
+        val dokkaSourceSets = when (this) {
+            is org.jetbrains.dokka.gradle.DokkaTask -> dokkaSourceSets
+            is org.jetbrains.dokka.gradle.DokkaTaskPartial -> dokkaSourceSets
+            else -> return@withType
+        }
 
-    moduleName.set("Kotlin Future Testing")
-    moduleVersion.set(version.toString())
+        moduleName.set("Kotlin Future Testing")
+        moduleVersion.set(version.toString())
 
-    dokkaSourceSets.configureEach {
-        includes.from(file("docs.md"))
-        includeNonPublic.set(false)
-        suppressObviousFunctions.set(true)
-        suppressInheritedMembers.set(true)
-        skipDeprecated.set(false)
-        skipEmptyPackages.set(true)
-        jdkVersion.set(8)
+        dokkaSourceSets.configureEach {
+            includes.from(file("docs.md"))
+            includeNonPublic.set(false)
+            suppressObviousFunctions.set(true)
+            suppressInheritedMembers.set(true)
+            skipDeprecated.set(false)
+            skipEmptyPackages.set(true)
+            jdkVersion.set(8)
 
-        val sourceSet = this.sourceSetID.sourceSetName
+            val sourceSet = this.sourceSetID.sourceSetName
 
-        sourceLink {
-            localDirectory.set(file("src/main/kotlin"))
+            sourceLink {
+                localDirectory.set(file("src/main/kotlin"))
 
-            remoteUrl.set(URL("https://github.com/rnett/kotlin-future-testing/blob/$sourceLinkBranch/src/$sourceSet/kotlin"))
-            remoteLineSuffix.set("#L")
+                remoteUrl.set(URL("https://github.com/rnett/kotlin-future-testing/blob/$sourceLinkBranch/src/$sourceSet/kotlin"))
+                remoteLineSuffix.set("#L")
+            }
         }
     }
 }
