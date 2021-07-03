@@ -11,7 +11,7 @@ plugins {
     `kotlin-dsl`
 }
 
-version = "0.1.0"
+version = "0.1.1-SNAPSHOT"
 group = "com.github.rnett.kotlin-future-testing"
 description = "A Gradle settings plugin to use Kotlin future versions"
 
