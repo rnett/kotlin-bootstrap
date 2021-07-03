@@ -147,6 +147,8 @@ public class KotlinFutureTestingExtension(
      * Useful for fixing issues.
      *
      * Does not override [disabled].
+     *
+     * Note that this only applies to the current build, so you will need to add it for any including builds as we..
      */
     public fun forceBootstrap(version: String = "latest") {
         forceProp = KotlinFutureVersionProp.Bootstrap(version)
@@ -158,6 +160,8 @@ public class KotlinFutureTestingExtension(
      * Useful for fixing issues.
      *
      * Does not override [disabled].
+     *
+     * Note that this only applies to the current build, so you will need to add it for any including builds as we..
      */
     public fun forceEap(version: String = "latest") {
         forceProp = KotlinFutureVersionProp.Eap(version)
