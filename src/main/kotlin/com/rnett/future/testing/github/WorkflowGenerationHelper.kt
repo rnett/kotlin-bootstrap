@@ -1,8 +1,12 @@
-package com.rnett.future.testing
+package com.rnett.future.testing.github
 
 import org.intellij.lang.annotations.Language
 import java.io.File
 
+/**
+ * Experimental marker for Github workflow generation.  The generated workflows should be checked,
+ * and the generation APIs may change.
+ */
 @RequiresOptIn(
     "Experimental Github workflow generation, check it manually.  APIs may change.",
     level = RequiresOptIn.Level.WARNING
@@ -57,6 +61,7 @@ public class GithubWorkflowGenerator(
                   run: |
 ${commands.joinToString("\n").replaceIndent("                    ")}""".trimIndent()
 
+    @ExperimentalGithubWorkflowGeneration
     public fun bootstrapCommands(
         vararg commands: String,
         suffix: String = "compile"

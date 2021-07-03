@@ -1,5 +1,8 @@
 package com.rnett.future.testing
 
+import com.rnett.future.testing.github.ExperimentalGithubWorkflowGeneration
+import com.rnett.future.testing.github.GithubWorkflowGenerator
+import com.rnett.future.testing.github.Scheduling
 import org.gradle.api.initialization.Settings
 import org.gradle.api.provider.Provider
 import org.slf4j.LoggerFactory
@@ -74,14 +77,17 @@ internal sealed class KotlinFutureVersionProp(val versionKind: KotlinVersionKind
 /**
  * A context for version filters, providing the original version.
  */
-public class FilterContext(public val originalVersion: String)
+public class FilterContext internal constructor(public val originalVersion: String)
 
 /**
  * A future version filter.
  */
 public typealias VersionFilter = FilterContext.(version: String) -> Boolean
 
-public class KotlinFutureTestingExtension(
+/**
+ * The settings extension for configuring Kotlin future versions.
+ */
+public class KotlinFutureTestingExtension internal constructor(
     @PublishedApi internal val rootProjectDir: File,
     private val bootstrapProp: Provider<String>,
     private val eapProp: Provider<String>
@@ -102,7 +108,7 @@ public class KotlinFutureTestingExtension(
     private val eapFilters = mutableListOf<VersionFilter>()
 
     /**
-     * Apply a filter to the bootstrap versions.
+     * Apply a filter to the bootstrap and EAP versions.
      * This is always applied, even when the version is specified via property.
      */
     public fun filter(filter: VersionFilter) {
@@ -119,7 +125,7 @@ public class KotlinFutureTestingExtension(
     }
 
     /**
-     * Apply a filter to the bootstrap versions.
+     * Apply a filter to the EAP versions.
      * This is always applied, even when the version is specified via property.
      */
     public fun filterEap(filter: VersionFilter) {

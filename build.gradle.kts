@@ -113,6 +113,7 @@ tasks.withType<org.jetbrains.dokka.gradle.AbstractDokkaTask>() {
     moduleVersion.set(version.toString())
 
     dokkaSourceSets.configureEach {
+        includes.from(file("docs.md"))
         includeNonPublic.set(false)
         suppressObviousFunctions.set(true)
         suppressInheritedMembers.set(true)

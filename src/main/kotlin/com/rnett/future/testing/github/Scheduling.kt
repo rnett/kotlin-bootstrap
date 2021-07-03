@@ -1,8 +1,12 @@
-package com.rnett.future.testing
+package com.rnett.future.testing.github
 
+import com.rnett.future.testing.KotlinFutureTestingExtension
 import org.slf4j.LoggerFactory
 import java.time.DayOfWeek
 
+/**
+ * CRON scheduling.
+ */
 public sealed class Scheduling(public val cron: String) {
     protected companion object {
         internal val logger = LoggerFactory.getLogger(KotlinFutureTestingExtension::class.java)
@@ -15,12 +19,18 @@ public sealed class Scheduling(public val cron: String) {
         require(hour < 23) { "Can't have minute >= 23" }
     }
 
+    /**
+     * Run daily at a set time
+     */
     public data class Daily(val minute: Int = 0, val hour: Int = 0) : Scheduling("$minute $hour * * *") {
         init {
             checkMH(minute, hour)
         }
     }
 
+    /**
+     * Run weekly at a set time
+     */
     public data class Weekly(val minute: Int = 0, val hour: Int = 0, val dayOfWeek: DayOfWeek = DayOfWeek.SATURDAY) :
         Scheduling("$minute $hour * * ${dayOfWeek.value}") {
         init {
@@ -28,6 +38,9 @@ public sealed class Scheduling(public val cron: String) {
         }
     }
 
+    /**
+     * Run monthly at a set time
+     */
     public data class Monthly(val minute: Int = 0, val hour: Int = 0, val dayOfMonth: Int = 1) :
         Scheduling("$minute $hour $dayOfMonth * *") {
         init {

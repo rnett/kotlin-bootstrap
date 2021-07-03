@@ -25,7 +25,8 @@ public enum class KotlinVersionKind {
 internal const val kotlinFutureVersionProp = "kotlinFutureVersion"
 
 /**
- * Get the Kotlin version being used, with its kind.  Will always be set, even if a future version is not used.
+ * Get the Kotlin version being used, with its kind.  Will always be set, even if a future version is not used
+ * (in that case, the kind will be [KotlinVersionKind.Unchanged] and [KotlinFutureTestingVersion.isUnchanged] will be true).
  */
 public val Project.kotlinFutureVersion: KotlinFutureTestingVersion
     get() = (extensions.extraProperties.properties[kotlinFutureVersionProp] as Lazy<*>?)?.value as KotlinFutureTestingVersion?

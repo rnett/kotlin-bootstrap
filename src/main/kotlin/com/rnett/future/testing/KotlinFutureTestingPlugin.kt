@@ -1,12 +1,15 @@
 package com.rnett.future.testing
 
+import com.rnett.future.testing.ice.IceListener
 import org.gradle.api.Plugin
 import org.gradle.api.initialization.Settings
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URI
 
-
+/**
+ * The settings plugin
+ */
 public class KotlinFutureTestingPlugin : Plugin<Settings> {
     private val logger = LoggerFactory.getLogger(KotlinFutureTestingPlugin::class.java)
 

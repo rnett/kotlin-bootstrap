@@ -1,5 +1,6 @@
-package com.rnett.future.testing
+package com.rnett.future.testing.ice
 
+import com.rnett.future.testing.kotlinFutureVersion
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
