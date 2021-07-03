@@ -127,6 +127,8 @@ afterEvaluate {
             sourceLink {
                 localDirectory.set(file("src/main/kotlin"))
 
+                println("Source branch: $sourceLinkBranch")
+
                 remoteUrl.set(URL("https://github.com/rnett/kotlin-future-testing/blob/$sourceLinkBranch/src/$sourceSet/kotlin"))
                 remoteLineSuffix.set("#L")
             }
