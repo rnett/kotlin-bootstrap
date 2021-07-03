@@ -18,7 +18,11 @@ public class KotlinFutureTestingPlugin : Plugin<Settings> {
             settings.rootDir,
             settings.providers.gradleProperty(Constants.bootstrapProperty).forUseAtConfigurationTime(),
             settings.providers.gradleProperty(Constants.eapProperty).forUseAtConfigurationTime()
-        )
+        ) { action ->
+            settings.gradle.settingsEvaluated {
+                action()
+            }
+        }
 
         settings.gradle.settingsEvaluated {
             if (extension.isFuture) {
@@ -26,7 +30,7 @@ public class KotlinFutureTestingPlugin : Plugin<Settings> {
                     IceListener(
                         File(settings.rootDir, "build/${Constants.iceReportDir}"),
                         settings.providers.gradleProperty(Constants.reportIceProperty).forUseAtConfigurationTime(),
-                        extension::alwaysReportICEs
+                        extension::reportICEs
                     )
                 )
             }

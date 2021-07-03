@@ -22,7 +22,8 @@ public class GithubWorkflowGenerator(
     private val scheduling: Scheduling?,
     private val baseDir: File,
     private val branch: String?,
-    private val force: Boolean
+    private val force: Boolean,
+    private val canIceReport: Boolean
 ) {
 
     private val commonSteps = mutableListOf<String>()
@@ -329,14 +330,17 @@ $checkout
 ${commonSteps.joinToString("\n\n").replaceIndent("      ")}
 
 ${steps.replaceIndent("      ")}
-
+${
+                    if (canIceReport)
+                        """
       - name: Archive ICE report
         uses: actions/upload-artifact@v2
         if: ${sign}{{ failure() }}
         with:
           name: $iceArtifactName
           path: build/kotlin-future-testing-ICE-report
-        
+""" else ""
+                }
   check-results:
     name: Results
     needs: [try-no-$key, try-kotlin-$key]

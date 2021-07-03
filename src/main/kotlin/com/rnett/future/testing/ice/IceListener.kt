@@ -1,5 +1,6 @@
 package com.rnett.future.testing.ice
 
+import com.rnett.future.testing.ReportICEs
 import com.rnett.future.testing.kotlinFutureVersion
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -11,17 +12,21 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskState
 import java.io.File
 
+
 internal class IceListener(
     private val outputDir: File,
     doReportProp: Provider<String>,
-    alwaysReportIces: () -> Boolean
+    doReport: () -> ReportICEs
 ) :
     TaskExecutionListener {
     private val stderr = mutableMapOf<Task, StderrListener>()
 
     private val doReport by lazy {
-        alwaysReportIces() ||
-                (doReportProp.orNull != null && doReportProp.orNull?.toLowerCase() != "false")
+        when (doReport()) {
+            ReportICEs.Always -> true
+            ReportICEs.IfProperty -> (doReportProp.orNull != null && doReportProp.orNull?.toLowerCase() != "false")
+            ReportICEs.Never -> false
+        }
     }
 
     private class StderrListener() : StandardOutputListener {
@@ -81,6 +86,7 @@ internal class IceListener(
         }?.builder?.toString() ?: ""
 
         val exception = state.failure
+        //TODO report linker errors too
         if (exception != null &&
             "Internal compiler error" in exception.cause?.message.orEmpty()
         ) {

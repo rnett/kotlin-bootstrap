@@ -85,29 +85,48 @@ public class FilterContext internal constructor(public val originalVersion: Stri
 public typealias VersionFilter = FilterContext.(version: String) -> Boolean
 
 /**
+ * Controls when to report ICEs.
+ */
+public enum class ReportICEs {
+    /**
+     * Always report.
+     */
+    Always,
+
+    /**
+     * Report if the gradle property `reportICEs` is present and not equal to `false`.
+     */
+    IfProperty,
+
+    /**
+     * Never report.
+     */
+    Never;
+}
+
+/**
  * The settings extension for configuring Kotlin future versions.
  */
 public class KotlinFutureTestingExtension internal constructor(
     @PublishedApi internal val rootProjectDir: File,
     private val bootstrapProp: Provider<String>,
-    private val eapProp: Provider<String>
+    private val eapProp: Provider<String>,
+    private val afterEval: (() -> Unit) -> Unit
 ) {
     /**
-     * Setting this to `true` will cause the bootstrap version to never be used,
-     * even if the property is set.
+     * Setting this to `true` will disable the plugin, even if properties are set.
      */
     public var disabled: Boolean = false
 
     /**
-     * Whether to always make an internal compiler error report, regardless of whether
-     * the `reportICEs` property is present.  `true` by default.
+     * Controls when to make an internal compiler error report.
      *
      * If ICE reports are enabled, generates reports (`.json` and human-readable `.txt` in `$rootDir/build/kotlin-future-testing-ICE-report`.
      * See the Github README for details on what they contain, but **they contain no code** (unless it's in the compiler's stack trace).
      *
      * These reports will automatically be made artifacts by the generated Github workflows.
      */
-    public var alwaysReportICEs: Boolean = true
+    internal var reportICEs: ReportICEs = ReportICEs.Always
 
     /**
      * If `true` (as it is by default), will substitute non-plugin dependencies with groups
@@ -337,7 +356,7 @@ public class KotlinFutureTestingExtension internal constructor(
      * @param force whether to overwrite existing workflows of the same name
      */
     @ExperimentalGithubWorkflowGeneration
-    public inline fun generateGithubWorkflows(
+    public fun generateGithubWorkflows(
         jdk: String = "15",
         runners: List<String> = listOf("ubuntu-latest"),
         scheduling: Scheduling? = Scheduling.Weekly(),
@@ -346,6 +365,16 @@ public class KotlinFutureTestingExtension internal constructor(
         force: Boolean = false,
         block: GithubWorkflowGenerator.() -> Unit
     ) {
-        GithubWorkflowGenerator(jdk, runners, scheduling, baseDir, branch, force).apply(block)
+        afterEval {
+            GithubWorkflowGenerator(
+                jdk,
+                runners,
+                scheduling,
+                baseDir,
+                branch,
+                force,
+                reportICEs != ReportICEs.Never
+            ).apply(block)
+        }
     }
 }

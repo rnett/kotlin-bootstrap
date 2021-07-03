@@ -1,9 +1,13 @@
 package com.rnett.future.testing
 
+import com.rnett.future.testing.KotlinVersionKind.Unchanged
 import org.gradle.api.Project
 
 /**
- * The kind of kotlin version.
+ * The kind of kotlin the version.
+ *
+ * Note that if you manually configure an EAP or bootstrap build, this will
+ * still be [Unchanged] unless future version substitution is done.
  */
 public enum class KotlinVersionKind {
     /**
@@ -18,6 +22,9 @@ public enum class KotlinVersionKind {
 
     /**
      * The same version you configured manually.
+     *
+     * Note that if you manually configure an EAP or bootstrap build, this will
+     * still be [Unchanged] unless future version substitution is done.
      */
     Unchanged;
 }
@@ -34,6 +41,10 @@ public val Project.kotlinFutureVersion: KotlinFutureTestingVersion
 
 /**
  * The current Kotlin version and its kind, with helper methods for selecting library versions.
+ *
+ * @property versionKind the source of the current version
+ * @property version the current Kotlin version
+ * @property originalVersion the Kotlin version before future version substitution
  */
 public data class KotlinFutureTestingVersion(
     public val versionKind: KotlinVersionKind,
