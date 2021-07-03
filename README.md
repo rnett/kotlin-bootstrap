@@ -82,6 +82,8 @@ You can see the schema
 yourself [here](https://github.com/rnett/kotlin-future-testing/blob/main/src/main/kotlin/com/rnett/future/testing/ice/IceListener.kt#L35)
 .
 
+Example reports are [here](./example-ice-reports), generated from the [test](./test) project.
+
 For now, this only applies to things reported as internal compiler errors, i.e. not linker errors.
 
 ## GitHub workflow generation
@@ -89,12 +91,13 @@ For now, this only applies to things reported as internal compiler errors, i.e. 
 An experimental
 function [`generateGithubWorkflows`](https://rnett.github.io/kotlin-future-testing/release/-kotlin%20-future%20-testing/com.rnett.future.testing/-kotlin-future-testing-extension/generate-github-workflows.html)
 is provided in the extension to generate GitHub workflows to run tests with bootstrap and/or eap versions, on command
-and/or a schedule. It is capable of generating workflows with custom steps and multiple runners, but makes generating
-the most common setups easy. ICE reports will be uploaded as an artifact unless disabled (the `reportICEs` property is
-set).
+and/or a schedule. It is capable of generating workflows with custom steps, a set branch, and multiple runners, but
+makes generating the most common setups easy. ICE reports will be uploaded as an artifact unless disabled (
+the `reportICEs` property is set). The workflow will be manually trigger-able, and can be passed a schedule (the default
+is weekly).
 
-Note that it is experimental, so you should manually inspect the generated workflows. They make good starting points if
-you have a complicated setup.
+Note that the generation is experimental, so you should manually inspect the generated workflows. They make good
+starting points if you have a complicated setup.
 
 Also note that generation is done immediately when generation is called, so if `force` is true it will be re-generated
 every time the gradle project is loaded.
