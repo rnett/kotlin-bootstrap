@@ -77,7 +77,6 @@ gradlePlugin {
 extensions.getByType<com.vanniktech.maven.publish.MavenPublishBaseExtension>().apply {
     if (!version.toString().toLowerCase().endsWith("snapshot")) {
         val stagingProfileId = project.findProperty("sonatypeRepositoryId")?.toString()
-        println("Publishing to $stagingProfileId")
         publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.DEFAULT, stagingProfileId)
     }
 
