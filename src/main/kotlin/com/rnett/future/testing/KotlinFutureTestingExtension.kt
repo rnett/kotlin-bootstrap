@@ -170,7 +170,7 @@ public class KotlinFutureTestingExtension internal constructor(
     }
 
     /**
-     * Require a future version with the same incremental version (i.e. 1.5.10) as the original version.
+     * Require a future version with the same incremental version (i.e. 1.5.20) as the original version.
      */
     public fun requireSameIncrementalVersion() {
         clamping = VersionClamping.Incremental
@@ -184,7 +184,7 @@ public class KotlinFutureTestingExtension internal constructor(
     }
 
     /**
-     * Prefer a future version with the same incremental version (i.e. 1.5.10) as the original version.
+     * Prefer a future version with the same incremental version (i.e. 1.5.20) as the original version.
      */
     public fun preferSameIncrementalVersion() {
         preferredClamping = VersionClamping.Incremental

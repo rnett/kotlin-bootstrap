@@ -2,8 +2,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.URL
 
 plugins {
-    kotlin("jvm") version "1.5.10"
-    kotlin("plugin.serialization") version "1.5.10"
+    kotlin("jvm") version "1.5.20"
+    kotlin("plugin.serialization") version "1.5.20"
     id("com.vanniktech.maven.publish") version "0.15.1"
     id("org.jetbrains.dokka") version "1.4.32"
     `java-gradle-plugin`

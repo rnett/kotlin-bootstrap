@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.5.10"
+    kotlin("jvm") version "1.5.20"
 }
 
 group = "com.github.rnett.kotlin-future-testing"
@@ -18,7 +18,7 @@ tasks.test {
 }
 
 dependencies {
-    implementation(kotlin("compiler-embeddable", "1.5.10"))
+    implementation(kotlin("compiler-embeddable", "1.5.20"))
 }
 
 tasks.withType<KotlinCompile>() {
