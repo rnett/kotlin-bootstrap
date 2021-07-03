@@ -185,7 +185,7 @@ public class KotlinFutureTestingExtension(
             futureVersion(prop)
         )
         if (version.isFuture) {
-            if (version.version != oldKotlinVersion()) {
+            if (version.version == oldKotlinVersion()) {
                 println("\nUsing configured kotlin version of ${oldKotlinVersion()}, no future versions found.\n")
             } else {
                 println("\nUsing future version of Kotlin: ${oldKotlinVersion()}, type is ${version.versionKind}.\n")
