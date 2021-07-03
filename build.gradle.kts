@@ -4,14 +4,14 @@ import java.net.URL
 plugins {
     kotlin("jvm") version "1.4.31"
     kotlin("plugin.serialization") version "1.4.31"
-    id("com.vanniktech.maven.publish") version "0.15.1"
+    id("com.vanniktech.maven.publish") version "0.16.0"
     id("org.jetbrains.dokka") version "1.4.32"
     id("com.github.johnrengelman.shadow") version "7.0.0"
     `java-gradle-plugin`
     `kotlin-dsl`
 }
 
-version = "0.1.0-RC"
+version = "0.1.0"
 group = "com.github.rnett.kotlin-future-testing"
 description = "A Gradle settings plugin to use Kotlin future versions"
 
