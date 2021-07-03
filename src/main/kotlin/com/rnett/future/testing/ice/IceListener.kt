@@ -70,6 +70,25 @@ internal class IceListener(
             prettyPrint = true
         }
 
+        private val icePackages = setOf(
+            "org.jetbrains.kotlin.backend",
+            "org.jetbrains.kotlin.ir",
+            "org.jetbrains.kotlin.cli",
+            "org.jetbrains.kotlin.daemon",
+        )
+
+        private fun isICE(error: String, taskName: String): Boolean {
+            val taskNameLC = taskName.toLowerCase()
+
+            if ("test" in taskNameLC || "check" in taskNameLC) return false
+
+            if ("e:" in error && "Internal compiler error" in error) return true
+            if (icePackages.any { "at $it" in error }) return true
+            if (".konan" in error) return true
+            if ("error: Linking" in error || "ld: " in error) return true
+            return false
+        }
+
     }
 
     override fun beforeExecute(task: Task) {
@@ -87,8 +106,7 @@ internal class IceListener(
 
         val exception = state.failure
         //TODO report linker errors too
-        if (exception != null &&
-            "Internal compiler error" in exception.cause?.message.orEmpty()
+        if (exception != null && isICE(exception.cause?.message.orEmpty(), task.name)
         ) {
             val gitDir = gitDir(task.project.rootDir)
             val rootRelPath = gitDir?.let {
