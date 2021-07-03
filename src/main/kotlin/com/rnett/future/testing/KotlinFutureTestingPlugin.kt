@@ -16,16 +16,17 @@ public class KotlinFutureTestingPlugin : Plugin<Settings> {
     override fun apply(settings: Settings) {
         val extension = KotlinFutureTestingExtension(
             settings.rootDir,
-            settings.providers.gradleProperty("kotlinBootstrap").forUseAtConfigurationTime(),
-            settings.providers.gradleProperty("kotlinEap").forUseAtConfigurationTime()
+            settings.providers.gradleProperty(Constants.bootstrapProperty).forUseAtConfigurationTime(),
+            settings.providers.gradleProperty(Constants.eapProperty).forUseAtConfigurationTime()
         )
 
         settings.gradle.settingsEvaluated {
             if (extension.isFuture) {
                 settings.gradle.taskGraph.addTaskExecutionListener(
                     IceListener(
-                        File(settings.rootDir, "build/kotlin-future-testing-ICE-report"),
-                        settings.providers.gradleProperty("reportICEs").forUseAtConfigurationTime()
+                        File(settings.rootDir, "build/${Constants.iceReportDir}"),
+                        settings.providers.gradleProperty(Constants.reportIceProperty).forUseAtConfigurationTime(),
+                        extension::alwaysReportICEs
                     )
                 )
             }
@@ -42,7 +43,7 @@ public class KotlinFutureTestingPlugin : Plugin<Settings> {
                     resolutionStrategy {
                         eachDependency {
                             if (extension.isFuture) {
-                                if (target.group == "org.jetbrains.kotlin" || target.group.startsWith("org.jetbrains.kotlin.")) {
+                                if (target.group == Constants.kotlinGroup || target.group.startsWith("${Constants.kotlinGroup}.")) {
                                     val version = extension.version.version
 
                                     logger.info("Using future version $version for dependency $target")
@@ -60,7 +61,7 @@ public class KotlinFutureTestingPlugin : Plugin<Settings> {
                 logger.info("Using bootstrap version, adding boostrap repo for project ${this.path}")
                 this.repositories.apply {
                     maven {
-                        url = URI("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap")
+                        url = URI(Constants.bootstrapRepo)
                     }
                 }
             }
@@ -70,7 +71,7 @@ public class KotlinFutureTestingPlugin : Plugin<Settings> {
             pluginManagement {
                 resolutionStrategy {
                     eachPlugin {
-                        if (target.id.id.startsWith("org.jetbrains.kotlin.")) {
+                        if (target.id.id.startsWith("${Constants.kotlinGroup}.")) {
                             val oldVersion = target.version
                             if (oldVersion != null && (extension.oldKotlinVersion == null || oldVersion > extension.oldKotlinVersion!!)) {
                                 logger.info("Found old kotlin version $oldVersion")
@@ -88,7 +89,7 @@ public class KotlinFutureTestingPlugin : Plugin<Settings> {
                 if (extension.isBootstrap) {
                     repositories.apply {
                         maven {
-                            url = URI("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap")
+                            url = URI(Constants.bootstrapRepo)
                         }
                     }
                 }

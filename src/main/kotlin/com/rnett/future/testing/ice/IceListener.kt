@@ -11,11 +11,18 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskState
 import java.io.File
 
-internal class IceListener(private val outputDir: File, doReportProp: Provider<String>) :
+internal class IceListener(
+    private val outputDir: File,
+    doReportProp: Provider<String>,
+    alwaysReportIces: () -> Boolean
+) :
     TaskExecutionListener {
     private val stderr = mutableMapOf<Task, StderrListener>()
 
-    private val doReport by lazy { doReportProp.orNull != null && doReportProp.orNull?.toLowerCase() != "false" }
+    private val doReport by lazy {
+        alwaysReportIces() ||
+                (doReportProp.orNull != null && doReportProp.orNull?.toLowerCase() != "false")
+    }
 
     private class StderrListener() : StandardOutputListener {
         val builder: StringBuilder = java.lang.StringBuilder()

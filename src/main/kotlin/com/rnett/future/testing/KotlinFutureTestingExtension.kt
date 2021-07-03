@@ -99,6 +99,17 @@ public class KotlinFutureTestingExtension internal constructor(
     public var disabled: Boolean = false
 
     /**
+     * Whether to always make an internal compiler error report, regardless of whether
+     * the `reportICEs` property is present.  `true` by default.
+     *
+     * If ICE reports are enabled, generates reports (`.json` and human-readable `.txt` in `$rootDir/build/kotlin-future-testing-ICE-report`.
+     * See the Github README for details on what they contain, but **they contain no code** (unless it's in the compiler's stack trace).
+     *
+     * These reports will automatically be made artifacts by the generated Github workflows.
+     */
+    public var alwaysReportICEs: Boolean = true
+
+    /**
      * If `true` (as it is by default), will substitute non-plugin dependencies with groups
      * of `org.jetbrains.kotlin` or sub-groups.
      */
@@ -291,7 +302,7 @@ public class KotlinFutureTestingExtension internal constructor(
 
         val version = prop.version!!
 
-        val isLatest = version.isBlank() || version.toLowerCase().let { it == "auto" || it == "latest" }
+        val isLatest = version.isBlank() || version.toLowerCase() in Constants.latestValues
 
         if (!isLatest) {
             logger.info("Kotlin future version is exact, using $prop")
@@ -322,8 +333,8 @@ public class KotlinFutureTestingExtension internal constructor(
      * @param runner the GitHub Actions runner OSs to use.  Multiple OSs will be done in a matrix.  Must have at least one element.
      * @param scheduling how often to schedule runs, or `null` to not schedule any
      * @param baseDir the git root, workflows will be generated in `$baseDir/.github/workflows`.
-     * @param branch the branch to use for scheduled runs
-     * @param force whether to overwrite existing workflows of the same name (`kotlin-${bootstrap|eap}-test.yml`)
+     * @param branch the branch to use for scheduled runs, or `null` to use whatever the `@actions/checkout` pulls by default
+     * @param force whether to overwrite existing workflows of the same name
      */
     @ExperimentalGithubWorkflowGeneration
     public inline fun generateGithubWorkflows(

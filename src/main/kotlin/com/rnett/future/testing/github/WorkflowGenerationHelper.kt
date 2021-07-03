@@ -1,5 +1,6 @@
 package com.rnett.future.testing.github
 
+import com.rnett.future.testing.Constants
 import org.intellij.lang.annotations.Language
 import java.io.File
 
@@ -30,6 +31,9 @@ public class GithubWorkflowGenerator(
         require(runners.isNotEmpty()) { "Must specify at least one runner OS" }
     }
 
+    /**
+     * Add some common `run: ` commands to all later generated workflows.
+     */
     @ExperimentalGithubWorkflowGeneration
     public fun commonCommands(vararg commands: String, name: String = "Common Setup", id: String? = null) {
         commonStep(buildString {
@@ -43,11 +47,19 @@ public class GithubWorkflowGenerator(
         })
     }
 
+    /**
+     * Add some common step(s) to all later generated workflows.
+     */
     @ExperimentalGithubWorkflowGeneration
     public fun commonStep(@Language("yml") steps: String) {
         commonSteps += steps
     }
 
+    /**
+     * Generate a bootstrap testing workflow that runs the gradle command line [gradleCommand] (`./gradlew $gradleCommand`).
+     *
+     * [suffix] will be used to name the workflow, and the workflow file will be named `kotlin-bootstrap-$suffix.yml`.
+     */
     @ExperimentalGithubWorkflowGeneration
     public fun bootstrap(
         gradleCommand: String = "assemble",
@@ -61,6 +73,11 @@ public class GithubWorkflowGenerator(
                   run: |
 ${commands.joinToString("\n").replaceIndent("                    ")}""".trimIndent()
 
+    /**
+     * Generate a bootstrap testing workflow that runs [commands] (`run: | $commands`, one per line).
+     *
+     * [suffix] will be used to name the workflow, and the workflow file will be named `kotlin-bootstrap-$suffix.yml`.
+     */
     @ExperimentalGithubWorkflowGeneration
     public fun bootstrapCommands(
         vararg commands: String,
@@ -72,6 +89,13 @@ ${commands.joinToString("\n").replaceIndent("                    ")}""".trimInde
         )
     }
 
+    /**
+     * Generate a bootstrap testing workflow with the steps [steps].
+     *
+     * Checkout, Gradle, Java, and Kotlin future version setup will be done beforehand.
+     *
+     * [suffix] will be used to name the workflow, and the workflow file will be named `kotlin-bootstrap-$suffix.yml`.
+     */
     @ExperimentalGithubWorkflowGeneration
     public fun bootstrapCustom(
         @Language("yml") steps: String,
@@ -80,6 +104,11 @@ ${commands.joinToString("\n").replaceIndent("                    ")}""".trimInde
         generateCustomGithubWorkflow(steps, false, suffix)
     }
 
+    /**
+     * Generate an EAP testing workflow that runs the gradle command line [gradleCommand] (`./gradlew $gradleCommand`).
+     *
+     * [suffix] will be used to name the workflow, and the workflow file will be named `kotlin-eap-$suffix.yml`.
+     */
     @ExperimentalGithubWorkflowGeneration
     public fun eap(
         gradleCommand: String = "assemble",
@@ -88,6 +117,11 @@ ${commands.joinToString("\n").replaceIndent("                    ")}""".trimInde
         eapCommands("./gradlew $gradleCommand", suffix = suffix)
     }
 
+    /**
+     * Generate an EAP testing workflow that runs [commands] (`run: | $commands`, one per line).
+     *
+     * [suffix] will be used to name the workflow, and the workflow file will be named `kotlin-eap-$suffix.yml`.
+     */
     @ExperimentalGithubWorkflowGeneration
     public fun eapCommands(
         vararg commands: String,
@@ -99,6 +133,13 @@ ${commands.joinToString("\n").replaceIndent("                    ")}""".trimInde
         )
     }
 
+    /**
+     * Generate an EAP testing workflow with the steps [steps].
+     *
+     * Checkout, Gradle, Java, and Kotlin future version setup will be done beforehand.
+     *
+     * [suffix] will be used to name the workflow, and the workflow file will be named `kotlin-eap-$suffix.yml`.
+     */
     @ExperimentalGithubWorkflowGeneration
     public fun eapCustom(
         @Language("yml") steps: String,
@@ -107,6 +148,13 @@ ${commands.joinToString("\n").replaceIndent("                    ")}""".trimInde
         generateCustomGithubWorkflow(steps, true, suffix)
     }
 
+    /**
+     * Generate bootstrap and EAP testing workflows that run the gradle command line [gradleCommand] (`./gradlew $gradleCommand`).
+     *
+     * [suffix] will be used to name the workflows, and the workflow files will be named `kotlin-{bootstrap|eap}-$suffix.yml`.
+     * @see bootstrap
+     * @see eap
+     */
     @ExperimentalGithubWorkflowGeneration
     public fun both(
         gradleCommand: String = "assemble",
@@ -116,6 +164,13 @@ ${commands.joinToString("\n").replaceIndent("                    ")}""".trimInde
         eap(gradleCommand, suffix)
     }
 
+    /**
+     * Generate bootstrap and EAP testing workflows that run [commands] (`run: | $commands`, one per line).
+     *
+     * [suffix] will be used to name the workflows, and the workflow files will be named `kotlin-{bootstrap|eap}-$suffix.yml`.
+     * @see bootstrapCommands
+     * @see eapCommands
+     */
     @ExperimentalGithubWorkflowGeneration
     public fun bothCommands(
         vararg commands: String,
@@ -125,6 +180,15 @@ ${commands.joinToString("\n").replaceIndent("                    ")}""".trimInde
         eapCommands(*commands, suffix = suffix)
     }
 
+    /**
+     * Generate bootstrap and EAP testing workflows with the steps [steps].
+     *
+     * Checkout, Gradle, Java, and Kotlin future version setup will be done beforehand.
+     *
+     * [suffix] will be used to name the workflows, and the workflow files will be named `kotlin-{bootstrap|eap}-$suffix.yml`.
+     * @see bootstrapCustom
+     * @see eapCustom
+     */
     @ExperimentalGithubWorkflowGeneration
     public fun bothCustom(
         @Language("yml") steps: String,
@@ -160,6 +224,7 @@ ${commands.joinToString("\n").replaceIndent("                    ")}""".trimInde
         val sign = "\$"
 
         val keyName = key.capitalize()
+        val futureProp = if (isEap) Constants.eapProperty else Constants.bootstrapProperty
         val suffixName = suffix.capitalize()
 
         file.writeText(buildString {
@@ -248,8 +313,8 @@ ${steps.replaceIndent("      ")}
     name: $suffixName with Kotlin $key
 ${runner.replaceIndent("    ")}
     env:
-      ORG_GRADLE_PROJECT_kotlin$keyName: "latest"
-      ORG_GRADLE_PROJECT_reportICEs: "true"
+      ORG_GRADLE_PROJECT_$futureProp: "latest"
+      ORG_GRADLE_PROJECT_${Constants.reportIceProperty}: "true"
     steps:
 $checkout
 

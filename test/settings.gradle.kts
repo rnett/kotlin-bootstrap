@@ -9,10 +9,6 @@ plugins {
 }
 
 kotlinFutureTesting {
-    requireSameFeatureVersion()
-    preferSameIncrementalVersion()
-
-//    generateGithubWorkflows { both() }
 }
 
 rootProject.name = "test"
