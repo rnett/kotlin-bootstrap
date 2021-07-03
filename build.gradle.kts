@@ -2,10 +2,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.URL
 
 plugins {
-    kotlin("jvm") version "1.5.20"
-    kotlin("plugin.serialization") version "1.5.20"
+    kotlin("jvm") version "1.4.31"
+    kotlin("plugin.serialization") version "1.4.31"
     id("com.vanniktech.maven.publish") version "0.15.1"
     id("org.jetbrains.dokka") version "1.4.32"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
     `java-gradle-plugin`
     `kotlin-dsl`
 }
@@ -19,7 +20,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
 }
 
 kotlin {
@@ -28,13 +29,32 @@ kotlin {
             attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 8)
         }
         explicitApi()
+        mavenPublication {
+            project.shadow.component(this)
+        }
     }
     sourceSets.all {
-        languageSettings {
+        languageSettings.apply {
             useExperimentalAnnotation("kotlin.contracts.ExperimentalContracts")
             useExperimentalAnnotation("kotlin.RequiresOptIn")
         }
     }
+}
+
+val shadowJar = tasks.shadowJar.apply {
+    configure {
+        archiveClassifier.set("")
+        relocate("kotlinx.serialization", "com.rnett.future.testing.kotlinx.serialization") {
+            exclude("kotlinx.serialization.Serializable")
+        }
+        dependencies {
+            exclude(dependency("org.jetbrains.kotlin:kotlin-stdlib.*:.*"))
+        }
+    }
+}
+
+tasks.jar.configure {
+    finalizedBy(shadowJar)
 }
 
 tasks.test {
