@@ -6,7 +6,7 @@ plugins {
     kotlin("jvm") version "1.5.10"
 }
 
-group = "com.github.rnett.kotlin-bootstrap"
+group = "com.github.rnett.kotlin-future-testing"
 version = "0.0.1-SNAPSHOT"
 
 repositories {

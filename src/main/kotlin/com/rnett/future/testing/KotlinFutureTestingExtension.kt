@@ -8,10 +8,16 @@ import java.net.URL
 
 internal const val kotlinFutureTestingExtension = "kotlinFutureTesting"
 
+/**
+ * Configure the kotlin future testing extension.
+ */
 public fun Settings.kotlinFutureTesting(block: KotlinFutureTestingExtension.() -> Unit) {
     kotlinFutureTesting.apply(block)
 }
 
+/**
+ * Get the kotlin future testing extension
+ */
 public val Settings.kotlinFutureTesting: KotlinFutureTestingExtension
     get() =
         extensions.getByName(kotlinFutureTestingExtension) as KotlinFutureTestingExtension
@@ -39,10 +45,10 @@ internal enum class VersionClamping {
         return prefix to versions.firstOrNull { it.startsWith(prefix) }
     }
 
-    fun matchingOrNull(original: String, kind: KotlinVersionKind, versions: List<String>): String? =
+    internal fun matchingOrNull(original: String, kind: KotlinVersionKind, versions: List<String>): String? =
         matchingHelper(original, kind, versions).second
 
-    fun matching(original: String, kind: KotlinVersionKind, versions: List<String>): String {
+    internal fun matching(original: String, kind: KotlinVersionKind, versions: List<String>): String {
         val (prefix, result) = matchingHelper(original, kind, versions)
         return result
             ?: error("No Kotlin ${kind.name.toLowerCase()} versions found with the same ${this.name.toLowerCase()} version as $original ($prefix).  Versions: $versions")
@@ -56,7 +62,7 @@ internal sealed class KotlinFutureVersionProp(val versionKind: KotlinVersionKind
     val isBootstrap: Boolean get() = this is Bootstrap
     val isFuture: Boolean get() = this !is None
 
-    object None : KotlinFutureVersionProp(KotlinVersionKind.Release) {
+    object None : KotlinFutureVersionProp(KotlinVersionKind.Unchanged) {
         override val version: String? = null
         override fun toString(): String = "None"
     }
@@ -64,6 +70,16 @@ internal sealed class KotlinFutureVersionProp(val versionKind: KotlinVersionKind
     data class Eap(override val version: String) : KotlinFutureVersionProp(KotlinVersionKind.Eap)
     data class Bootstrap(override val version: String) : KotlinFutureVersionProp(KotlinVersionKind.Bootstrap)
 }
+
+/**
+ * A context for version filters, providing the original version.
+ */
+public class FilterContext(public val originalVersion: String)
+
+/**
+ * A future version filter.
+ */
+public typealias VersionFilter = FilterContext.(version: String) -> Boolean
 
 public class KotlinFutureTestingExtension(
     @PublishedApi internal val rootProjectDir: File,
@@ -82,15 +98,14 @@ public class KotlinFutureTestingExtension(
      */
     public var substituteDependencies: Boolean = true
 
-    private val bootstrapFilters = mutableListOf<(String) -> Boolean>()
-    private val eapFilters = mutableListOf<(String) -> Boolean>()
+    private val bootstrapFilters = mutableListOf<VersionFilter>()
+    private val eapFilters = mutableListOf<VersionFilter>()
 
-    //TODO make old version accessible in filters
     /**
      * Apply a filter to the bootstrap versions.
      * This is always applied, even when the version is specified via property.
      */
-    public fun filter(filter: (String) -> Boolean) {
+    public fun filter(filter: VersionFilter) {
         bootstrapFilters += filter
         eapFilters += filter
     }
@@ -99,7 +114,7 @@ public class KotlinFutureTestingExtension(
      * Apply a filter to the bootstrap versions.
      * This is always applied, even when the version is specified via property.
      */
-    public fun filterBootstrap(filter: (String) -> Boolean) {
+    public fun filterBootstrap(filter: VersionFilter) {
         bootstrapFilters += filter
     }
 
@@ -107,7 +122,7 @@ public class KotlinFutureTestingExtension(
      * Apply a filter to the bootstrap versions.
      * This is always applied, even when the version is specified via property.
      */
-    public fun filterEap(filter: (String) -> Boolean) {
+    public fun filterEap(filter: VersionFilter) {
         eapFilters += filter
     }
 
@@ -208,9 +223,10 @@ public class KotlinFutureTestingExtension(
         return KotlinFutureVersionProp.None
     }
 
-    private fun List<String>.matching(filters: List<(String) -> Boolean>): List<String> {
+    private fun List<String>.matching(filters: List<VersionFilter>): List<String> {
         logger.debug("Checking filters on versions $this")
-        return filter { str -> filters.all { it(str) } }.ifEmpty { error("No version matching filters.  Versions: $this") }
+        val context = FilterContext(oldKotlinVersion())
+        return filter { str -> filters.all { context.it(str) } }.ifEmpty { error("No version matching filters.  Versions: $this") }
     }
 
     private var preferredClamping: VersionClamping? = null
@@ -225,11 +241,17 @@ public class KotlinFutureTestingExtension(
         val prop = futureProp()
         val version = KotlinFutureTestingVersion(
             prop.versionKind,
-            futureVersion(prop)
+            futureVersion(prop),
+            oldKotlinVersion()
         )
         if (version.isFuture) {
             if (version.version == oldKotlinVersion()) {
                 println("\nUsing configured kotlin version of ${oldKotlinVersion()}, no future versions found.\n")
+                return@lazy KotlinFutureTestingVersion(
+                    KotlinVersionKind.Unchanged,
+                    oldKotlinVersion(),
+                    oldKotlinVersion()
+                )
             } else {
                 println("\nUsing future version of Kotlin: ${version.version}, type is ${version.versionKind}.\n")
             }
@@ -297,6 +319,7 @@ public class KotlinFutureTestingExtension(
      * @param branch the branch to use for scheduled runs
      * @param force whether to overwrite existing workflows of the same name (`kotlin-${bootstrap|eap}-test.yml`)
      */
+    @ExperimentalGithubWorkflowGeneration
     public inline fun generateGithubWorkflows(
         jdk: String = "15",
         runners: List<String> = listOf("ubuntu-latest"),

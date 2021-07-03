@@ -116,8 +116,8 @@ jobs:
             ${{ runner.os }}-publish-gradle-
             ${{ runner.os }}-test-gradle-
 
-#      - name: Generate HTML Docs
-#        run: ./gradlew :kotlin-js-action:dokkaHtml -PsourceLinkBranch=$GITHUB_SHA --info
+      - name: Generate HTML Docs
+        run: ./gradlew dokkaHtml -PsourceLinkBranch=$GITHUB_SHA
 
       - name: Publish
         if: github.ref == 'refs/heads/main'
@@ -129,13 +129,22 @@ jobs:
           GRADLE_OPTS: -Xmx2048m -XX:MaxPermSize=512m
         run: ./gradlew publish --no-daemon --no-parallel
 
-#      - name: Publish docs
-#        if: github.ref == 'refs/heads/main'
-#        uses: rnett/publish-docs@v2.6
-#        with:
-#          from: ./kotlin-js-action/build/dokka/html
-#          publish-to: $version,$latest
-#          version: ${{ needs.find-version.outputs.version }}
+      - name: Publish docs
+        if: github.ref == 'refs/heads/main'
+        uses: rnett/publish-docs@v2.6
+        with:
+          from: ./build/dokka/html
+          publish-to: $latest,!old-releases/$version
+          version: ${{ needs.find-version.outputs.version }}
+
+      - name: Publish README
+        uses: rnett/publish-docs@v2.6
+        with:
+          from-file: ./build/README.md
+          publish-to: '$latest,!.'
+          version: ${{ needs.find-version.outputs.version }}
+          restore: true
+          message: Update README for $version
 
       - name: Stop gradle daemon
         run: ./gradlew --stop

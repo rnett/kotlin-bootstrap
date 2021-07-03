@@ -1,18 +1,19 @@
-# Kotlin Bootstrap Plugin
+# Kotlin Future Testing
 
-[![Maven Central](https://img.shields.io/maven-central/v/com.github.rnett.kotlin-bootstrap/kotlin-bootstrap)](https://search.maven.org/artifact/com.github.rnett.kotlin-bootstrap/kotlin-bootstrap)
-[![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/com.github.rnett.kotlin-bootstrap/kotlin-bootstrap?server=https%3A%2F%2Foss.sonatype.org)](https://oss.sonatype.org/content/repositories/snapshots/com/github/rnett/kotlin-bootstrap/)
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.rnett.kotlin-future-testing/kotlin-future-testing)](https://search.maven.org/artifact/com.github.rnett.kotlin-future-testing/kotlin-future-testing)
+[![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/com.github.rnett.kotlin-future-testing/kotlin-future-testing?server=https%3A%2F%2Foss.sonatype.org)](https://oss.sonatype.org/content/repositories/snapshots/com/github/rnett/kotlin-future-testing/)
 
-A **settings** plugin to easily test your code with the latest Kotlin bootstrap compiler.
+A **settings** plugin to easily test your code with the latest Kotlin bootstrap or EAP version.
 
-Plugin: `com.github.rnett.kotlin-bootstrap`
+Plugin: `com.github.rnett.kotlin-future-testing`
+
+Will not work if you are using multiple Kotlin versions.
 
 ## Usage
 
 Apply the plugin to your settings file.
 
-The bootstrap version can be set using the property `kotlinBootstrap`, or in a settings file
-with `kotlinBootstrap.bootstrapVersion`. The property takes precedence if it is present.
+T
 
 If the version is null or `kotlinBootstrap.disabled` is set to `true` in the settings file, doesn't use a bootstrap
 version.

@@ -3,9 +3,14 @@ package com.rnett.future.testing
 import org.intellij.lang.annotations.Language
 import java.io.File
 
-//TODO matrix (multiple runners)
-//TODO make old version accessible in filters
-//TODO use suffix more in workflow strings/names
+@RequiresOptIn(
+    "Experimental Github workflow generation, check it manually.  APIs may change.",
+    level = RequiresOptIn.Level.WARNING
+)
+@MustBeDocumented
+public annotation class ExperimentalGithubWorkflowGeneration
+
+@ExperimentalGithubWorkflowGeneration
 public class GithubWorkflowGenerator(
     private val jdk: String,
     private val runners: List<String>,
@@ -21,6 +26,7 @@ public class GithubWorkflowGenerator(
         require(runners.isNotEmpty()) { "Must specify at least one runner OS" }
     }
 
+    @ExperimentalGithubWorkflowGeneration
     public fun commonCommands(vararg commands: String, name: String = "Common Setup", id: String? = null) {
         commonStep(buildString {
             appendLine("- name: $name")
@@ -33,10 +39,12 @@ public class GithubWorkflowGenerator(
         })
     }
 
+    @ExperimentalGithubWorkflowGeneration
     public fun commonStep(@Language("yml") steps: String) {
         commonSteps += steps
     }
 
+    @ExperimentalGithubWorkflowGeneration
     public fun bootstrap(
         gradleCommand: String = "assemble",
         suffix: String = "compile"
@@ -59,6 +67,7 @@ ${commands.joinToString("\n").replaceIndent("                    ")}""".trimInde
         )
     }
 
+    @ExperimentalGithubWorkflowGeneration
     public fun bootstrapCustom(
         @Language("yml") steps: String,
         suffix: String = "compile"
@@ -66,6 +75,7 @@ ${commands.joinToString("\n").replaceIndent("                    ")}""".trimInde
         generateCustomGithubWorkflow(steps, false, suffix)
     }
 
+    @ExperimentalGithubWorkflowGeneration
     public fun eap(
         gradleCommand: String = "assemble",
         suffix: String = "compile"
@@ -73,6 +83,7 @@ ${commands.joinToString("\n").replaceIndent("                    ")}""".trimInde
         eapCommands("./gradlew $gradleCommand", suffix = suffix)
     }
 
+    @ExperimentalGithubWorkflowGeneration
     public fun eapCommands(
         vararg commands: String,
         suffix: String = "compile"
@@ -83,6 +94,7 @@ ${commands.joinToString("\n").replaceIndent("                    ")}""".trimInde
         )
     }
 
+    @ExperimentalGithubWorkflowGeneration
     public fun eapCustom(
         @Language("yml") steps: String,
         suffix: String = "compile"
@@ -90,6 +102,7 @@ ${commands.joinToString("\n").replaceIndent("                    ")}""".trimInde
         generateCustomGithubWorkflow(steps, true, suffix)
     }
 
+    @ExperimentalGithubWorkflowGeneration
     public fun both(
         gradleCommand: String = "assemble",
         suffix: String = "compile"
@@ -98,6 +111,7 @@ ${commands.joinToString("\n").replaceIndent("                    ")}""".trimInde
         eap(gradleCommand, suffix)
     }
 
+    @ExperimentalGithubWorkflowGeneration
     public fun bothCommands(
         vararg commands: String,
         suffix: String = "compile"
@@ -106,6 +120,7 @@ ${commands.joinToString("\n").replaceIndent("                    ")}""".trimInde
         eapCommands(*commands, suffix = suffix)
     }
 
+    @ExperimentalGithubWorkflowGeneration
     public fun bothCustom(
         @Language("yml") steps: String,
         suffix: String = "compile"
