@@ -1,0 +1,9 @@
+name: Kotlin Future Testing
+title: null
+
+tagline: 'GitHub Pages for Kotlin Future Testing'
+description: "A Gradle setting plugin for testing Kotlin bootstrap and EAP versions"
+google_site_verification: NX_Zv2QuIMO-ZCDQmYsSc1jtCHtzu49xCJybqomzc_s
+
+plugins:
+  - jekyll-seo-tag
